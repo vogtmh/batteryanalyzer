@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Battery Analyzer</string>
+    <string name="instructions">Tap "Detect Files" to automatically find dumpstate files, or use "Browse Files" to select manually from your device\'s internal storage.</string>
+    <string name="scan_for_files">Detect Files</string>
+    <string name="browse_files">Browse Files</string>
+    <string name="select_dumpstate_file">Select Dumpstate File</string>
+    <string name="available_files">Available Dumpstate Files</string>
+    <string name="no_files_found">No dumpstate files found. Try \"Browse Files\" to select manually.</string>
+    <string name="file_icon">File icon</string>
+    <string name="permission_required">Storage permission required to detect files</string>
+    <string name="grant_permission">Grant Permission</string>
+    <string name="scanning_files">Scanning for files…</string>
+    <string name="battery_health_results">Logfile Results</string>
+    <string name="battery_health_section">Battery Health</string>
+    <string name="battery_stats_section">Battery Statistics</string>
+    <string name="battery_health">Battery Health:</string>
+    <string name="current_capacity">Current Capacity:</string>
+    <string name="design_capacity">Design Capacity:</string>
+    <string name="capacity_loss">Capacity Loss:</string>
+    <string name="state_of_charge">State of Charge (SoC):</string>
+    <string name="cycle_count">Cycle Count:</string>
+    <string name="first_use_date">First Use Date:</string>
+    <string name="logfile_timestamp">Logfile created:</string>
+    <string name="parsing_file">Parsing file… %1$d lines processed</string>
+    <string name="parsing_complete">Analysis complete!</string>
+    <string name="error_reading_file">Error reading file: %1$s</string>
+    <string name="error_no_data">No battery data found in file</string>
+    <string name="health_excellent">Battery Health: Excellent</string>
+    <string name="health_good">Battery Health: Good</string>
+    <string name="health_fair">Battery Health: Fair</string>
+    <string name="health_poor">Battery Health: Poor</string>
+    <string name="health_replace">Battery Health: Replace Soon</string>
+    <string name="format_mah">%1$d mAh</string>
+    <string name="format_percentage">%.1f%%</string>
+    <string name="format_cycles">%1$d cycles</string>
+    <string name="not_available">N/A</string>
+    
+    <!-- Help Dialog -->
+    <string name="help_title">How to Create Dumpstate File</string>
+    <string name="help_samsung_title">Samsung Devices:</string>
+    <string name="help_samsung_instructions">1. Open the Phone app\n2. Dial *#9900#\n3. Tap \"Run dumpstate/logcat\"\n4. Wait for completion\n5. Files are saved to /log folder\n6. Use this app to analyze</string>
+    <string name="help_sony_title">Other devices (tested on Sony):</string>
+    <string name="help_sony_instructions">1. Go to Settings → About phone\n2. Tap \"Build number\" 7 times to enable Developer options\n3. Go to Settings → System → Developer options\n4. Tap \"Take bug report\"\n5. Select \"Full report\"\n6. Wait for notification\n7. Files are saved as ZIP\n8. Use this app to analyze</string>
+    <string name="help_close">Close</string>
+</resources>

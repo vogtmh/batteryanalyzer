@@ -1,0 +1,80 @@
+# Gradle files
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Local configuration file (sdk path, etc)
+local.properties
+
+# Android Studio files
+.idea/
+*.iml
+.DS_Store
+
+# Built application files
+*.apk
+*.aar
+*.ap_
+*.aab
+
+# Files for the ART/Dalvik VM
+*.dex
+
+# Java class files
+*.class
+
+# Generated files
+bin/
+gen/
+out/
+captures/
+
+# Signing files
+.signing/
+
+# External native build folder generated in Android Studio 2.2 and later
+.externalNativeBuild
+.cxx/
+
+# IntelliJ
+*.iml
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/gradle.xml
+.idea/assetWizardSettings.xml
+.idea/dictionaries
+.idea/libraries
+.idea/jarRepositories.xml
+.idea/compiler.xml
+.idea/misc.xml
+.idea/deploymentTargetDropDown.xml
+.idea/navEditor.xml
+
+# Keystore files
+*.jks
+*.keystore
+
+# Google Services (e.g. APIs or Firebase)
+google-services.json
+
+# Android Profiling
+*.hprof
+
+# Test/Sample files - dumpstate and bugreport files
+dumpstate.txt
+dumpstate*.txt
+dumpState_*.log
+bugreport-*.txt
+bugreport-*.zip
+
+# Project documentation
+PROJECT_SUMMARY.md
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Battery icon source
+3_104879.png
+battery_icon.png
