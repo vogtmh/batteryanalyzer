@@ -23,6 +23,8 @@ class DumpstateParser {
         private val HEALTHD_BATTERY_PATTERN = Pattern.compile("healthd: battery l=(\\d+).*?fc=(\\d+).*?cc=(\\d+)")
         private val CHARGE_COUNTER_SERVICE_PATTERN = Pattern.compile("Charge counter:\\s+(\\d+)")
         private val BATTERY_LEVEL_PATTERN = Pattern.compile("^\\s+level:\\s+(\\d+)")
+        private val ESTIMATED_CAPACITY_PATTERN = Pattern.compile("Estimated battery capacity:\\s+(\\d+)\\s*mAh")
+        private val LEARNED_CAPACITY_PATTERN = Pattern.compile("Last learned battery capacity:\\s+(\\d+)\\s*mAh")
         private val DUMPSTATE_TIMESTAMP_PATTERN = Pattern.compile("== dumpstate: (\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2})")
         private val DEVICE_BRAND_PATTERN = Pattern.compile("\\[ro\\.product\\.brand\\]:\\s*\\[(.+?)\\]")
         private val DEVICE_MODEL_PATTERN = Pattern.compile("\\[ro\\.product\\.model\\]:\\s*\\[(.+?)\\]")
@@ -43,6 +45,7 @@ class DumpstateParser {
         var logfileTimestamp: String? = null
         var deviceBrand: String? = null
         var deviceModel: String? = null
+        var hasReliableCapacity = false // Track if we have Samsung CAP_NOM
         val batteryChanges = mutableListOf<BatteryLevelChange>()
         val errors = mutableListOf<String>()
         
@@ -95,6 +98,7 @@ class DumpstateParser {
                         val capNomMatcher = CAP_NOM_PATTERN.matcher(line)
                         if (capNomMatcher.find()) {
                             currentCapacity = capNomMatcher.group(1)?.toIntOrNull()
+                            hasReliableCapacity = true // Mark as reliable
                         }
                     }
                     
@@ -151,6 +155,28 @@ class DumpstateParser {
                         if (designUahMatcher.find()) {
                             val uAh = designUahMatcher.group(1)?.toLongOrNull()
                             designCapacity = uAh?.let { (it / 1000).toInt() }
+                        }
+                    }
+                    
+                    // Parse estimated battery capacity from battery stats
+                    if (designCapacity == null) {
+                        val estimatedMatcher = ESTIMATED_CAPACITY_PATTERN.matcher(line)
+                        if (estimatedMatcher.find()) {
+                            designCapacity = estimatedMatcher.group(1)?.toIntOrNull()
+                        }
+                    }
+                    
+                    // Parse learned battery capacity from battery stats
+                    // This represents the full charge capacity (what battery can hold when fully charged)
+                    // Only use if we don't have a reliable Samsung CAP_NOM value
+                    if (!hasReliableCapacity) {
+                        val learnedMatcher = LEARNED_CAPACITY_PATTERN.matcher(line)
+                        if (learnedMatcher.find()) {
+                            val learned = learnedMatcher.group(1)?.toIntOrNull()
+                            if (learned != null) {
+                                fullChargeCapacity = learned // This is the full charge capacity
+                                currentCapacity = learned // Also use as current capacity for health calc
+                            }
                         }
                     }
                     
@@ -221,12 +247,18 @@ class DumpstateParser {
         }
         
         // Calculate health percentage
-        val actualDesignCapacity = getReasonableDesignCapacity(designCapacity, currentCapacity, fullChargeCapacity)
-        val healthPercentage = calculateHealthPercentage(
-            currentCapacity, 
-            fullChargeCapacity, 
-            actualDesignCapacity
-        )
+        val designCapacityData = getReasonableDesignCapacity(designCapacity, currentCapacity, fullChargeCapacity)
+        val actualDesignCapacity = designCapacityData.first
+        val isDesignCapacityReliable = designCapacityData.second
+        val healthPercentage = if (isDesignCapacityReliable) {
+            calculateHealthPercentage(
+                currentCapacity, 
+                fullChargeCapacity, 
+                actualDesignCapacity
+            )
+        } else {
+            null // Don't show health if design capacity is estimated
+        }
         
         // Combine brand and model
         val deviceName = when {
@@ -353,22 +385,30 @@ class DumpstateParser {
         parsedDesignCapacity: Int?,
         currentCapacity: Int?,
         fullChargeCapacity: Int?
-    ): Int? {
+    ): Pair<Int?, Boolean> {
         // If we have a parsed value and it's reasonable (2000-15000 mAh for phones/tablets), use it
         parsedDesignCapacity?.let {
             if (it in 2000..15000) {
-                return it
+                return Pair(it, true) // Reliable value from device
             }
         }
         
-        // Otherwise, estimate from current capacity assuming battery is at least 70% health
-        val actualCapacity = currentCapacity ?: fullChargeCapacity
-        actualCapacity?.let {
-            // Assume battery is between 70-100% health, estimate design capacity
-            // Use current capacity as minimum (100% health scenario)
-            return maxOf(it, (it / 0.85).toInt()) // Assume ~85% health as baseline
+        // If design capacity is invalid but we have fullChargeCapacity from healthd, use that
+        // (it's the best available estimate for current battery capacity)
+        fullChargeCapacity?.let {
+            if (it in 2000..15000) {
+                return Pair(it, false) // Use full charge capacity as approximation
+            }
         }
         
-        return null
+        // Last resort: use current capacity
+        val actualCapacity = currentCapacity
+        actualCapacity?.let {
+            if (it in 2000..15000) {
+                return Pair(it, false) // Use current capacity as approximation
+            }
+        }
+        
+        return Pair(null, false)
     }
 }

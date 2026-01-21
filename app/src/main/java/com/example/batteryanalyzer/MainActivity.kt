@@ -39,6 +39,8 @@ class MainActivity : AppCompatActivity() {
     private var isParsing: Boolean = false
     private var currentFileUri: String? = null
     private var currentFilePath: String? = null
+    private var isFirstLaunch = true
+    private var hasRequestedPermission = false
     
     private val filePickerLauncher = registerForActivityResult(
         ActivityResultContracts.OpenDocument()
@@ -67,6 +69,9 @@ class MainActivity : AppCompatActivity() {
         
         // Restore state after rotation
         savedInstanceState?.let {
+            isFirstLaunch = false
+            hasRequestedPermission = it.getBoolean("has_requested_permission", false)
+            
             currentBatteryInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 it.getParcelable("battery_info", BatteryInfo::class.java)
             } else {
@@ -106,19 +111,39 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             }
+            
+            // Update button state
+            updateDetectFilesButton(hasStoragePermission())
         } ?: run {
             // First time launch - request permission and scan if granted
             if (hasStoragePermission()) {
                 scanForFiles()
             } else {
                 requestStoragePermission()
+                hasRequestedPermission = true
                 updateDetectFilesButton(false)
             }
         }
     }
     
+    override fun onResume() {
+        super.onResume()
+        
+        // Check if permission was granted while we were in settings
+        if (hasRequestedPermission && hasStoragePermission()) {
+            updateDetectFilesButton(true)
+            if (isFirstLaunch) {
+                scanForFiles()
+                isFirstLaunch = false
+            }
+        } else {
+            updateDetectFilesButton(hasStoragePermission())
+        }
+    }
+    
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
+        outState.putBoolean("has_requested_permission", hasRequestedPermission)
         currentBatteryInfo?.let {
             outState.putParcelable("battery_info", it)
         }
@@ -564,7 +589,8 @@ class MainActivity : AppCompatActivity() {
             binding.tvHealthPercentage.text = "${df.format(healthPercentage)}%"
             binding.tvHealthPercentage.setTextColor(getHealthColor(healthPercentage))
         } else {
-            binding.tvHealthPercentage.text = getString(R.string.not_available)
+            binding.tvHealthPercentage.text = "N/A"
+            binding.tvHealthPercentage.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray))
         }
 
         // Current Capacity
@@ -579,10 +605,19 @@ class MainActivity : AppCompatActivity() {
 
         // Design Capacity
         if (batteryInfo.designCapacityMah != null) {
-            binding.tvDesignCapacity.text = getString(
-                R.string.format_mah,
-                batteryInfo.designCapacityMah
-            )
+            val hasReliableDesign = batteryInfo.healthPercentage != null
+            if (hasReliableDesign) {
+                binding.tvDesignCapacity.text = getString(
+                    R.string.format_mah,
+                    batteryInfo.designCapacityMah
+                )
+            } else {
+                // Show estimated value with note
+                binding.tvDesignCapacity.text = getString(
+                    R.string.format_mah,
+                    batteryInfo.designCapacityMah
+                ) + " (approx)"
+            }
         } else {
             binding.tvDesignCapacity.text = getString(R.string.not_available)
         }
@@ -624,9 +659,16 @@ class MainActivity : AppCompatActivity() {
         // Health Status
         val statusText = getHealthStatusText(healthPercentage)
         binding.tvHealthStatus.text = statusText
-        binding.tvHealthStatus.setBackgroundColor(
-            getHealthBackgroundColor(healthPercentage)
-        )
+        if (healthPercentage != null) {
+            binding.tvHealthStatus.setBackgroundColor(
+                getHealthBackgroundColor(healthPercentage)
+            )
+        } else {
+            // Show gray background for unreliable health
+            binding.tvHealthStatus.setBackgroundColor(
+                ContextCompat.getColor(this, android.R.color.darker_gray)
+            )
+        }
         
         // Device Model
         if (batteryInfo.deviceModel != null) {
