@@ -11,6 +11,11 @@ An Android app that parses dumpstate files to extract and display battery health
   - Design capacity (mAh)
   - Capacity loss
   - Cycle count
+- ⚙️ **Settings**: Manage manual design capacity input
+- 🔍 **Smart Detection**: Automatic design capacity from logs, settings, or system PowerProfile API
+- 💡 **Manual Input**: Set custom design capacity for unsupported devices
+- 📖 **Built-in Help**: Instructions and troubleshooting guides
+- ℹ️ **About Screen**: View app version and features
 - 🎨 **Color-coded Health Status**: Visual indicators for battery health
 - 📱 **On-Device Processing**: No upload required, works offline
 
@@ -25,11 +30,18 @@ An Android app that parses dumpstate files to extract and display battery health
 
 ### Analyze Battery Health
 1. Open Battery Analyzer app
-2. Tap "Select Dumpstate File"
-3. Navigate to `/log` folder
-4. Select `dumpstate.txt` file
+2. Tap "Detect Files" for auto-scan or "Browse Files" for manual selection
+3. Navigate to `/log` folder (if browsing manually)
+4. Select `dumpstate.txt` or bug report file
 5. Wait for parsing to complete
 6. View battery health results
+
+### Manual Design Capacity
+If design capacity cannot be determined from the log:
+1. App will suggest a value from system PowerProfile (if available)
+2. Enter design capacity manually in the dialog
+3. Or set it later in Settings from the drawer menu
+4. Saved capacity will be used automatically for future analyses
 
 ## Building the App
 
@@ -104,13 +116,19 @@ app/
 ├── src/main/
 │   ├── java/com/example/batteryanalyzer/
 │   │   ├── MainActivity.kt          # Main UI and file handling
+│   │   ├── SettingsActivity.kt      # Settings management
+│   │   ├── HelpActivity.kt          # Help and instructions
+│   │   ├── AboutActivity.kt         # App information
 │   │   ├── model/
 │   │   │   └── BatteryInfo.kt       # Data models
 │   │   └── parser/
 │   │       └── DumpstateParser.kt   # Log file parser
 │   ├── res/
 │   │   ├── layout/
-│   │   │   └── activity_main.xml    # Main UI layout
+│   │   │   ├── activity_main.xml    # Main UI layout
+│   │   │   ├── activity_settings.xml
+│   │   │   ├── activity_help.xml
+│   │   │   └── activity_about.xml
 │   │   ├── values/
 │   │   │   ├── strings.xml
 │   │   │   ├── colors.xml

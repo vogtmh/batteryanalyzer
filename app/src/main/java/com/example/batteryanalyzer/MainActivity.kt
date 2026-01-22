@@ -8,11 +8,16 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.Settings
+import android.view.MenuItem
 import android.view.View
+import android.view.WindowManager
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.view.GravityCompat
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.batteryanalyzer.adapter.FileListAdapter
@@ -20,6 +25,7 @@ import com.example.batteryanalyzer.databinding.ActivityMainBinding
 import com.example.batteryanalyzer.model.BatteryInfo
 import com.example.batteryanalyzer.model.FileInfo
 import com.example.batteryanalyzer.parser.DumpstateParser
+import com.google.android.material.navigation.NavigationView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -61,9 +67,27 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Enable edge-to-edge display
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            window.setDecorFitsSystemWindows(false)
+        } else {
+            @Suppress("DEPRECATION")
+            window.decorView.systemUiVisibility = (
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+            )
+        }
+        
+        // Keep status bar transparent for edge-to-edge drawer
+        window.statusBarColor = android.graphics.Color.TRANSPARENT
+        
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        setupToolbar()
+        setupDrawer()
         setupRecyclerView()
         setupClickListeners()
         
@@ -172,6 +196,52 @@ class MainActivity : AppCompatActivity() {
             adapter = fileAdapter
         }
     }
+    
+    private fun setupToolbar() {
+        setSupportActionBar(binding.toolbar)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.setHomeAsUpIndicator(R.drawable.ic_menu)
+    }
+    
+    private fun setupDrawer() {
+        binding.navigationView.setNavigationItemSelectedListener { menuItem ->
+            binding.drawerLayout.closeDrawer(GravityCompat.START)
+            when (menuItem.itemId) {
+                R.id.action_settings -> {
+                    startActivity(Intent(this, SettingsActivity::class.java))
+                    true
+                }
+                R.id.action_help -> {
+                    startActivity(Intent(this, HelpActivity::class.java))
+                    true
+                }
+                R.id.action_about -> {
+                    startActivity(Intent(this, AboutActivity::class.java))
+                    true
+                }
+                else -> false
+            }
+        }
+    }
+    
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            android.R.id.home -> {
+                binding.drawerLayout.openDrawer(GravityCompat.START)
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+    
+    override fun onBackPressed() {
+        if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            binding.drawerLayout.closeDrawer(GravityCompat.START)
+        } else {
+            @Suppress("DEPRECATION")
+            super.onBackPressed()
+        }
+    }
 
     private fun setupClickListeners() {
         binding.btnScanFiles.setOnClickListener {
@@ -184,10 +254,6 @@ class MainActivity : AppCompatActivity() {
         
         binding.btnSelectFile.setOnClickListener {
             openFilePicker()
-        }
-        
-        binding.btnHelp.setOnClickListener {
-            showHelpDialog()
         }
     }
     
@@ -358,7 +424,8 @@ class MainActivity : AppCompatActivity() {
                 showLoading(false)
 
                 if (batteryInfo != null && batteryInfo.hasData) {
-                    displayResults(batteryInfo)
+                    val finalBatteryInfo = applyManualDesignCapacity(batteryInfo)
+                    displayResults(finalBatteryInfo)
                 } else {
                     showError(getString(R.string.error_no_data))
                 }
@@ -490,7 +557,8 @@ class MainActivity : AppCompatActivity() {
                 showLoading(false)
 
                 if (batteryInfo != null && batteryInfo.hasData) {
-                    displayResults(batteryInfo)
+                    val finalBatteryInfo = applyManualDesignCapacity(batteryInfo)
+                    displayResults(finalBatteryInfo)
                 } else {
                     showError(getString(R.string.error_no_data))
                 }
@@ -591,11 +659,6 @@ class MainActivity : AppCompatActivity() {
         } else {
             binding.tvHealthPercentage.text = "N/A"
             binding.tvHealthPercentage.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray))
-            
-            // Prompt user to provide design capacity if health can't be calculated
-            if (batteryInfo.currentCapacityMah != null && batteryInfo.designCapacityMah != null) {
-                showDesignCapacityDialog(batteryInfo)
-            }
         }
 
         // Current Capacity
@@ -788,15 +851,26 @@ class MainActivity : AppCompatActivity() {
     private fun showDesignCapacityDialog(batteryInfo: BatteryInfo) {
         val input = android.widget.EditText(this)
         input.inputType = android.text.InputType.TYPE_CLASS_NUMBER
-        input.hint = "e.g., 5000"
+        
+        // Try to get suggested capacity from PowerProfile
+        val suggestedCapacity = getDesignCapacityFromPowerProfile()
+        if (suggestedCapacity > 0) {
+            input.hint = "Suggested: $suggestedCapacity"
+            input.setText(suggestedCapacity.toString())
+        } else {
+            input.hint = "e.g., 5000"
+        }
         
         val message = buildString {
             append("Battery health cannot be calculated because design capacity is not available in the log.\n\n")
             if (batteryInfo.deviceModel != null) {
                 append("Device: ${batteryInfo.deviceModel}\n")
             }
-            append("Current capacity: ${batteryInfo.currentCapacityMah} mAh\n\n")
-            append("Please enter the design capacity in mAh:")
+            append("Current capacity: ${batteryInfo.currentCapacityMah} mAh\n")
+            if (suggestedCapacity > 0) {
+                append("Suggested design capacity: $suggestedCapacity mAh (from system)\n")
+            }
+            append("\nPlease enter the design capacity in mAh:")
         }
         
         AlertDialog.Builder(this)
@@ -806,6 +880,11 @@ class MainActivity : AppCompatActivity() {
             .setPositiveButton("Calculate") { _, _ ->
                 val designCapacity = input.text.toString().toIntOrNull()
                 if (designCapacity != null && designCapacity in 2000..15000) {
+                    // Save to SharedPreferences so it appears in settings
+                    getSharedPreferences("BatteryAnalyzer", MODE_PRIVATE)
+                        .edit()
+                        .putInt("design_capacity", designCapacity)
+                        .apply()
                     recalculateHealthWithDesignCapacity(batteryInfo, designCapacity)
                 } else {
                     android.widget.Toast.makeText(
@@ -837,6 +916,64 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
     
+    private fun showSettingsDialog() {
+        val prefs = getSharedPreferences("BatteryAnalyzer", MODE_PRIVATE)
+        val savedCapacity = prefs.getInt("design_capacity", -1)
+        
+        val input = android.widget.EditText(this)
+        input.inputType = android.text.InputType.TYPE_CLASS_NUMBER
+        input.hint = "e.g., 5000"
+        if (savedCapacity > 0) {
+            input.setText(savedCapacity.toString())
+        }
+        
+        val linearLayout = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setPadding(60, 20, 60, 20)
+        }
+        
+        val description = android.widget.TextView(this).apply {
+            text = getString(R.string.settings_design_capacity_description)
+            textSize = 14f
+            setPadding(0, 0, 0, 30)
+        }
+        
+        linearLayout.addView(description)
+        linearLayout.addView(input)
+        
+        val dialog = AlertDialog.Builder(this)
+            .setTitle(getString(R.string.settings_title))
+            .setView(linearLayout)
+            .setPositiveButton(getString(R.string.settings_save)) { _, _ ->
+                val capacity = input.text.toString().toIntOrNull()
+                if (capacity != null && capacity in 2000..15000) {
+                    prefs.edit().putInt("design_capacity", capacity).apply()
+                    android.widget.Toast.makeText(this, getString(R.string.settings_saved), android.widget.Toast.LENGTH_SHORT).show()
+                } else if (input.text.toString().isEmpty()) {
+                    prefs.edit().remove("design_capacity").apply()
+                    android.widget.Toast.makeText(this, getString(R.string.settings_cleared), android.widget.Toast.LENGTH_SHORT).show()
+                } else {
+                    android.widget.Toast.makeText(
+                        this,
+                        "Invalid capacity. Please enter a value between 2000-15000 mAh",
+                        android.widget.Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+            .setNegativeButton(getString(R.string.settings_cancel), null)
+            .setNeutralButton(getString(R.string.settings_clear)) { _, _ ->
+                prefs.edit().remove("design_capacity").apply()
+                android.widget.Toast.makeText(this, getString(R.string.settings_cleared), android.widget.Toast.LENGTH_SHORT).show()
+            }
+            .create()
+        
+        dialog.show()
+        dialog.window?.setLayout(
+            android.view.WindowManager.LayoutParams.MATCH_PARENT,
+            android.view.WindowManager.LayoutParams.WRAP_CONTENT
+        )
+    }
+    
     private fun recalculateHealthWithDesignCapacity(batteryInfo: BatteryInfo, designCapacity: Int) {
         val currentCapacity = batteryInfo.currentCapacityMah ?: return
         val healthPercentage = (currentCapacity.toDouble() / designCapacity.toDouble()) * 100.0
@@ -849,5 +986,50 @@ class MainActivity : AppCompatActivity() {
         
         // Redisplay with updated info
         displayResults(updatedInfo)
+    }
+    
+    private fun applyManualDesignCapacity(batteryInfo: BatteryInfo): BatteryInfo {
+        // If design capacity is already in the log, use it
+        if (batteryInfo.designCapacityMah != null) {
+            return batteryInfo
+        }
+        
+        // Check if user has saved a design capacity in settings
+        val savedCapacity = getSharedPreferences("BatteryAnalyzer", MODE_PRIVATE)
+            .getInt("design_capacity", -1)
+        
+        if (batteryInfo.currentCapacityMah != null) {
+            if (savedCapacity > 0) {
+                // Use saved capacity automatically
+                val currentCapacity = batteryInfo.currentCapacityMah
+                val healthPercentage = (currentCapacity.toDouble() / savedCapacity.toDouble()) * 100.0
+                return batteryInfo.copy(
+                    designCapacityMah = savedCapacity,
+                    healthPercentage = healthPercentage
+                )
+            } else {
+                // Prompt user to provide design capacity
+                showDesignCapacityDialog(batteryInfo)
+            }
+        }
+        
+        return batteryInfo
+    }
+    
+    private fun getDesignCapacityFromPowerProfile(): Int {
+        try {
+            val powerProfileClass = Class.forName("com.android.internal.os.PowerProfile")
+            val constructor = powerProfileClass.getConstructor(android.content.Context::class.java)
+            val powerProfile = constructor.newInstance(applicationContext)
+            
+            // Try getBatteryCapacity() method
+            val method = powerProfileClass.getMethod("getBatteryCapacity")
+            val capacity = method.invoke(powerProfile) as? Double
+            
+            return capacity?.toInt() ?: 0
+        } catch (e: Exception) {
+            android.util.Log.e("BatteryAnalyzer", "Failed to get capacity from PowerProfile: ${e.message}")
+            return 0
+        }
     }
 }

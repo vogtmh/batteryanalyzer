@@ -250,6 +250,10 @@ class DumpstateParser {
         val designCapacityData = getReasonableDesignCapacity(designCapacity, currentCapacity, fullChargeCapacity)
         val actualDesignCapacity = designCapacityData.first
         val isDesignCapacityReliable = designCapacityData.second
+        
+        // Only use design capacity if it's reliable (actually from device, not estimated)
+        val finalDesignCapacity = if (isDesignCapacityReliable) actualDesignCapacity else null
+        
         val healthPercentage = if (isDesignCapacityReliable) {
             calculateHealthPercentage(
                 currentCapacity, 
@@ -270,7 +274,7 @@ class DumpstateParser {
         return BatteryInfo(
             cycleCount = cycleCount,
             currentCapacityMah = currentCapacity ?: fullChargeCapacity,
-            designCapacityMah = actualDesignCapacity,
+            designCapacityMah = finalDesignCapacity,
             fullChargeCapacityMah = fullChargeCapacity,
             healthPercentage = healthPercentage,
             firstUseDate = firstUseDate,
