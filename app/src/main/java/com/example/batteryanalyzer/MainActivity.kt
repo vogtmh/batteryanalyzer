@@ -591,6 +591,11 @@ class MainActivity : AppCompatActivity() {
         } else {
             binding.tvHealthPercentage.text = "N/A"
             binding.tvHealthPercentage.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray))
+            
+            // Prompt user to provide design capacity if health can't be calculated
+            if (batteryInfo.currentCapacityMah != null && batteryInfo.designCapacityMah != null) {
+                showDesignCapacityDialog(batteryInfo)
+            }
         }
 
         // Current Capacity
@@ -773,12 +778,76 @@ class MainActivity : AppCompatActivity() {
             append(getString(R.string.help_sony_instructions))
         }
         
-        androidx.appcompat.app.AlertDialog.Builder(this)
+        AlertDialog.Builder(this)
             .setTitle(getString(R.string.help_title))
             .setMessage(message)
-            .setPositiveButton(getString(R.string.help_close)) { dialog, _ ->
-                dialog.dismiss()
+            .setPositiveButton("OK", null)
+            .show()
+    }
+    
+    private fun showDesignCapacityDialog(batteryInfo: BatteryInfo) {
+        val input = android.widget.EditText(this)
+        input.inputType = android.text.InputType.TYPE_CLASS_NUMBER
+        input.hint = "e.g., 5000"
+        
+        val message = buildString {
+            append("Battery health cannot be calculated because design capacity is not available in the log.\n\n")
+            if (batteryInfo.deviceModel != null) {
+                append("Device: ${batteryInfo.deviceModel}\n")
+            }
+            append("Current capacity: ${batteryInfo.currentCapacityMah} mAh\n\n")
+            append("Please enter the design capacity in mAh:")
+        }
+        
+        AlertDialog.Builder(this)
+            .setTitle("Design Capacity Required")
+            .setMessage(message)
+            .setView(input)
+            .setPositiveButton("Calculate") { _, _ ->
+                val designCapacity = input.text.toString().toIntOrNull()
+                if (designCapacity != null && designCapacity in 2000..15000) {
+                    recalculateHealthWithDesignCapacity(batteryInfo, designCapacity)
+                } else {
+                    android.widget.Toast.makeText(
+                        this,
+                        "Invalid capacity. Please enter a value between 2000-15000 mAh",
+                        android.widget.Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .setNeutralButton("Look Up Online") { _, _ ->
+                // Open browser to search for device battery specs
+                val searchQuery = if (batteryInfo.deviceModel != null) {
+                    "${batteryInfo.deviceModel} battery capacity mAh"
+                } else {
+                    "battery capacity mAh"
+                }
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/search?q=${Uri.encode(searchQuery)}"))
+                try {
+                    startActivity(intent)
+                    // Show dialog again after they return
+                    android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                        showDesignCapacityDialog(batteryInfo)
+                    }, 1000)
+                } catch (e: Exception) {
+                    android.widget.Toast.makeText(this, "Cannot open browser", android.widget.Toast.LENGTH_SHORT).show()
+                }
             }
             .show()
+    }
+    
+    private fun recalculateHealthWithDesignCapacity(batteryInfo: BatteryInfo, designCapacity: Int) {
+        val currentCapacity = batteryInfo.currentCapacityMah ?: return
+        val healthPercentage = (currentCapacity.toDouble() / designCapacity.toDouble()) * 100.0
+        
+        // Create updated BatteryInfo with new values
+        val updatedInfo = batteryInfo.copy(
+            designCapacityMah = designCapacity,
+            healthPercentage = healthPercentage
+        )
+        
+        // Redisplay with updated info
+        displayResults(updatedInfo)
     }
 }

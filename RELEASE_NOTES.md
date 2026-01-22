@@ -1,3 +1,22 @@
+# Battery Analyzer v1.2.0
+
+## What's New in v1.2.0
+
+### New Features
+- ✨ **Manual Design Capacity Entry** - When design capacity cannot be determined from the log file (e.g., firmware bugs), the app now prompts you to:
+  - Enter the design capacity manually if you know it
+  - Look it up online via Google search
+  - Recalculate battery health with the correct value
+- 🔍 **Smart Detection** - Automatically detects when design capacity data is unreliable or missing
+- 📱 **Device-Specific Search** - Online lookup includes your device model for better search results
+
+### Improvements
+- 🎯 Better user experience for devices with invalid firmware data (like CMF Phone reporting 499 mAh instead of 5000 mAh)
+- 💡 Input validation ensures design capacity is within reasonable range (2000-15000 mAh)
+- 🔄 Dialog can be re-opened after looking up specs online
+
+---
+
 # Battery Analyzer v1.1.0
 
 ## What's New in v1.1.0
