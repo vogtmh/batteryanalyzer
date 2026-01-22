@@ -25,6 +25,7 @@ import com.example.batteryanalyzer.databinding.ActivityMainBinding
 import com.example.batteryanalyzer.model.BatteryInfo
 import com.example.batteryanalyzer.model.FileInfo
 import com.example.batteryanalyzer.parser.DumpstateParser
+import com.example.batteryanalyzer.util.HistoryManager
 import com.google.android.material.navigation.NavigationView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -37,6 +38,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private val parser = DumpstateParser()
     private lateinit var fileAdapter: FileListAdapter
+    private lateinit var historyManager: HistoryManager
     
     // State preservation
     private var currentBatteryInfo: BatteryInfo? = null
@@ -86,6 +88,7 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        historyManager = HistoryManager(this)
         setupToolbar()
         setupDrawer()
         setupRecyclerView()
@@ -207,6 +210,10 @@ class MainActivity : AppCompatActivity() {
         binding.navigationView.setNavigationItemSelectedListener { menuItem ->
             binding.drawerLayout.closeDrawer(GravityCompat.START)
             when (menuItem.itemId) {
+                R.id.action_history -> {
+                    startActivity(Intent(this, HistoryActivity::class.java))
+                    true
+                }
                 R.id.action_settings -> {
                     startActivity(Intent(this, SettingsActivity::class.java))
                     true
@@ -649,6 +656,16 @@ class MainActivity : AppCompatActivity() {
         currentBatteryInfo = batteryInfo
         currentError = null
         binding.cardResults.visibility = View.VISIBLE
+        
+        // Save to history
+        val saved = historyManager.saveResult(batteryInfo)
+        if (saved) {
+            android.widget.Toast.makeText(
+                this,
+                getString(R.string.history_saved),
+                android.widget.Toast.LENGTH_SHORT
+            ).show()
+        }
 
         // Battery Health Percentage
         val healthPercentage = batteryInfo.healthPercentage

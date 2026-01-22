@@ -23,14 +23,8 @@ class AboutActivity : AppCompatActivity() {
         try {
             val packageInfo = packageManager.getPackageInfo(packageName, 0)
             val versionName = packageInfo.versionName
-            val versionCode = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
-                packageInfo.longVersionCode
-            } else {
-                @Suppress("DEPRECATION")
-                packageInfo.versionCode.toLong()
-            }
             
-            binding.tvVersion.text = "Version $versionName (Build $versionCode)"
+            binding.tvVersion.text = "Version $versionName"
             binding.tvBuildDate.text = "Build Date: January 22, 2026"
         } catch (e: Exception) {
             binding.tvVersion.text = "Version information unavailable"
