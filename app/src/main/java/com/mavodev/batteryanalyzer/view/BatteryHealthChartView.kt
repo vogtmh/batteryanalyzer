@@ -1,4 +1,4 @@
-package com.example.batteryanalyzer.view
+package com.mavodev.batteryanalyzer.view
 
 import android.content.Context
 import android.content.res.Configuration
@@ -10,8 +10,8 @@ import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.View
 import androidx.core.content.ContextCompat
-import com.example.batteryanalyzer.R
-import com.example.batteryanalyzer.model.HistoryEntry
+import com.mavodev.batteryanalyzer.R
+import com.mavodev.batteryanalyzer.model.HistoryEntry
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.math.max

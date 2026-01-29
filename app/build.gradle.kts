@@ -5,15 +5,15 @@ plugins {
 }
 
 android {
-    namespace = "com.example.batteryanalyzer"
-    compileSdk = 34
+    namespace = "com.mavodev.batteryanalyzer"
+    compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.batteryanalyzer"
+        applicationId = "com.mavodev.batteryanalyzer"
         minSdk = 26
-        targetSdk = 34
-        versionCode = 5
-        versionName = "1.4.0"
+        targetSdk = 35
+        versionCode = 6
+        versionName = "1.4.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

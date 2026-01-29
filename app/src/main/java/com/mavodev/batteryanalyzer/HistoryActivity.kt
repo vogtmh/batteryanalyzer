@@ -1,14 +1,14 @@
-package com.example.batteryanalyzer
+package com.mavodev.batteryanalyzer
 
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.batteryanalyzer.adapter.HistoryAdapter
-import com.example.batteryanalyzer.adapter.HistoryListItem
-import com.example.batteryanalyzer.databinding.ActivityHistoryBinding
-import com.example.batteryanalyzer.util.HistoryManager
+import com.mavodev.batteryanalyzer.adapter.HistoryAdapter
+import com.mavodev.batteryanalyzer.adapter.HistoryListItem
+import com.mavodev.batteryanalyzer.databinding.ActivityHistoryBinding
+import com.mavodev.batteryanalyzer.util.HistoryManager
 
 class HistoryActivity : AppCompatActivity() {
 
@@ -55,16 +55,16 @@ class HistoryActivity : AppCompatActivity() {
             binding.rvHistory.visibility = View.VISIBLE
             
             // Build list with chart as first item if we have health data
-            val listItems = mutableListOf<com.example.batteryanalyzer.adapter.HistoryListItem>()
+            val listItems = mutableListOf<HistoryListItem>()
             
             val entriesWithHealth = entries.filter { it.healthPercentage != null }
             if (entriesWithHealth.size >= 2) {
-                listItems.add(com.example.batteryanalyzer.adapter.HistoryListItem.ChartItem(entries))
+                listItems.add(HistoryListItem.ChartItem(entries))
             }
             
             // Add all history entries
             entries.forEach { entry ->
-                listItems.add(com.example.batteryanalyzer.adapter.HistoryListItem.EntryItem(entry))
+                listItems.add(HistoryListItem.EntryItem(entry))
             }
             
             historyAdapter.submitList(listItems)

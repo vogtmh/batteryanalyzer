@@ -1,4 +1,4 @@
-package com.example.batteryanalyzer
+package com.mavodev.batteryanalyzer
 
 import android.Manifest
 import android.content.Intent
@@ -20,12 +20,12 @@ import androidx.core.view.GravityCompat
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.batteryanalyzer.adapter.FileListAdapter
-import com.example.batteryanalyzer.databinding.ActivityMainBinding
-import com.example.batteryanalyzer.model.BatteryInfo
-import com.example.batteryanalyzer.model.FileInfo
-import com.example.batteryanalyzer.parser.DumpstateParser
-import com.example.batteryanalyzer.util.HistoryManager
+import com.mavodev.batteryanalyzer.adapter.FileListAdapter
+import com.mavodev.batteryanalyzer.databinding.ActivityMainBinding
+import com.mavodev.batteryanalyzer.model.BatteryInfo
+import com.mavodev.batteryanalyzer.model.FileInfo
+import com.mavodev.batteryanalyzer.parser.DumpstateParser
+import com.mavodev.batteryanalyzer.util.HistoryManager
 import com.google.android.material.navigation.NavigationView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

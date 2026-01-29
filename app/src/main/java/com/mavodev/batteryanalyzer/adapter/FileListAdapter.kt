@@ -1,12 +1,12 @@
-package com.example.batteryanalyzer.adapter
+package com.mavodev.batteryanalyzer.adapter
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.example.batteryanalyzer.databinding.ItemFileBinding
-import com.example.batteryanalyzer.model.FileInfo
+import com.mavodev.batteryanalyzer.databinding.ItemFileBinding
+import com.mavodev.batteryanalyzer.model.FileInfo
 
 class FileListAdapter(
     private val onFileClick: (FileInfo) -> Unit

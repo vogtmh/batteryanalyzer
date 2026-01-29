@@ -1,8 +1,8 @@
-package com.example.batteryanalyzer
+package com.mavodev.batteryanalyzer
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import com.example.batteryanalyzer.databinding.ActivityAboutBinding
+import com.mavodev.batteryanalyzer.databinding.ActivityAboutBinding
 
 class AboutActivity : AppCompatActivity() {
     private lateinit var binding: ActivityAboutBinding

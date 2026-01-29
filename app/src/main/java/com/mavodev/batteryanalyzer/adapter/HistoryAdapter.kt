@@ -1,4 +1,4 @@
-package com.example.batteryanalyzer.adapter
+package com.mavodev.batteryanalyzer.adapter
 
 import android.view.LayoutInflater
 import android.view.View
@@ -7,10 +7,10 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.example.batteryanalyzer.R
-import com.example.batteryanalyzer.databinding.ItemChartBinding
-import com.example.batteryanalyzer.databinding.ItemHistoryBinding
-import com.example.batteryanalyzer.model.HistoryEntry
+import com.mavodev.batteryanalyzer.R
+import com.mavodev.batteryanalyzer.databinding.ItemChartBinding
+import com.mavodev.batteryanalyzer.databinding.ItemHistoryBinding
+import com.mavodev.batteryanalyzer.model.HistoryEntry
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 import java.util.*

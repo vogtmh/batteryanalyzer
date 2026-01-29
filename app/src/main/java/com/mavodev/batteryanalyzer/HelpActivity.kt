@@ -1,10 +1,10 @@
-package com.example.batteryanalyzer
+package com.mavodev.batteryanalyzer
 
 import android.os.Build
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import com.example.batteryanalyzer.databinding.ActivityHelpBinding
+import com.mavodev.batteryanalyzer.databinding.ActivityHelpBinding
 
 class HelpActivity : AppCompatActivity() {
 

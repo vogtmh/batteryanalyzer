@@ -1,9 +1,9 @@
-package com.example.batteryanalyzer.util
+package com.mavodev.batteryanalyzer.util
 
 import android.content.Context
 import android.content.SharedPreferences
-import com.example.batteryanalyzer.model.BatteryInfo
-import com.example.batteryanalyzer.model.HistoryEntry
+import com.mavodev.batteryanalyzer.model.BatteryInfo
+import com.mavodev.batteryanalyzer.model.HistoryEntry
 import org.json.JSONArray
 import org.json.JSONObject
 

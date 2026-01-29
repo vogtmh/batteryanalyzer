@@ -1,4 +1,4 @@
-package com.example.batteryanalyzer.model
+package com.mavodev.batteryanalyzer.model
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize

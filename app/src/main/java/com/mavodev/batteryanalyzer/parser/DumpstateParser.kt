@@ -1,7 +1,7 @@
-package com.example.batteryanalyzer.parser
+package com.mavodev.batteryanalyzer.parser
 
-import com.example.batteryanalyzer.model.BatteryInfo
-import com.example.batteryanalyzer.model.BatteryLevelChange
+import com.mavodev.batteryanalyzer.model.BatteryInfo
+import com.mavodev.batteryanalyzer.model.BatteryLevelChange
 import java.io.BufferedReader
 import java.io.InputStream
 import java.util.regex.Pattern

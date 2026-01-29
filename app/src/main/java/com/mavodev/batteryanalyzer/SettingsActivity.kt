@@ -1,9 +1,9 @@
-package com.example.batteryanalyzer
+package com.mavodev.batteryanalyzer
 
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.example.batteryanalyzer.databinding.ActivitySettingsBinding
+import com.mavodev.batteryanalyzer.databinding.ActivitySettingsBinding
 
 class SettingsActivity : AppCompatActivity() {
     private lateinit var binding: ActivitySettingsBinding

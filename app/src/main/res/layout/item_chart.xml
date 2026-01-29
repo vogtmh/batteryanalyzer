@@ -7,7 +7,7 @@
     app:cardCornerRadius="12dp"
     app:cardElevation="4dp">
 
-    <com.example.batteryanalyzer.view.BatteryHealthChartView
+    <com.mavodev.batteryanalyzer.view.BatteryHealthChartView
         android:id="@+id/chartView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
