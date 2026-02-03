@@ -27,6 +27,11 @@
             app:titleTextColor="?attr/colorOnPrimary"
             app:title="@string/app_name" />
 
+        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            android:id="@+id/swipeRefresh"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
         <ScrollView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -450,6 +455,7 @@
 
             </androidx.constraintlayout.widget.ConstraintLayout>
         </ScrollView>
+        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
     </LinearLayout>
 
     <!-- Navigation Drawer -->

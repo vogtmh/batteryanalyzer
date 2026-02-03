@@ -11,7 +11,9 @@ import android.provider.Settings
 import android.view.MenuItem
 import android.view.View
 import android.view.WindowManager
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.documentfile.provider.DocumentFile
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -56,14 +58,16 @@ class MainActivity : AppCompatActivity() {
         uri?.let { parseFileFromUri(it) }
     }
     
-    private val permissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        updateDetectFilesButton(isGranted)
-        if (isGranted) {
-            scanForFiles()
-        } else {
-            showPermissionDialog()
+    private val directoryPickerLauncher = registerForActivityResult(
+        ActivityResultContracts.OpenDocumentTree()
+    ) { uri: Uri? ->
+        uri?.let {
+            contentResolver.takePersistableUriPermission(
+                it,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION
+            )
+            saveDirectoryUri(it)
+            scanDirectory(it)
         }
     }
 
@@ -93,6 +97,7 @@ class MainActivity : AppCompatActivity() {
         setupDrawer()
         setupRecyclerView()
         setupClickListeners()
+        setupSwipeRefresh()
         
         // Restore state after rotation
         savedInstanceState?.let {
@@ -140,34 +145,27 @@ class MainActivity : AppCompatActivity() {
             }
             
             // Update button state
-            updateDetectFilesButton(hasStoragePermission())
+            updateDetectFilesButton(true)
         } ?: run {
-            // First time launch - request permission and scan if granted
-            if (hasStoragePermission()) {
-                scanForFiles()
-            } else {
-                requestStoragePermission()
-                hasRequestedPermission = true
-                updateDetectFilesButton(false)
+        // Check if we have a saved directory
+        updateDetectFilesButton(true)
+        if (isFirstLaunch) {
+            val savedUri = getSavedDirectoryUri()
+            if (savedUri != null) {
+                scanDirectory(savedUri)
             }
+            isFirstLaunch = false
+        }
         }
     }
-    
+
     override fun onResume() {
         super.onResume()
         
-        // Check if permission was granted while we were in settings
-        if (hasRequestedPermission && hasStoragePermission()) {
-            updateDetectFilesButton(true)
-            if (isFirstLaunch) {
-                scanForFiles()
-                isFirstLaunch = false
-            }
-        } else {
-            updateDetectFilesButton(hasStoragePermission())
-        }
+        // Update button state (always enable for now since we just use system picker)
+        updateDetectFilesButton(true)
     }
-    
+
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putBoolean("has_requested_permission", hasRequestedPermission)
@@ -191,7 +189,13 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupRecyclerView() {
         fileAdapter = FileListAdapter { fileInfo ->
-            parseFileFromPath(fileInfo.file)
+            val uri = Uri.parse(fileInfo.path)
+            // Check if it looks like a file path or a URI
+            if (uri.scheme == null) {
+                parseFileFromPath(fileInfo.file)
+            } else {
+                parseFileFromUri(uri)
+            }
         }
         
         binding.rvFiles.apply {
@@ -251,16 +255,25 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupClickListeners() {
+        binding.btnScanFiles.text = getString(R.string.select_folder)
         binding.btnScanFiles.setOnClickListener {
-            if (hasStoragePermission()) {
-                scanForFiles()
-            } else {
-                requestStoragePermission()
-            }
+            directoryPickerLauncher.launch(null)
         }
         
         binding.btnSelectFile.setOnClickListener {
             openFilePicker()
+        }
+    }
+    
+    private fun setupSwipeRefresh() {
+        binding.swipeRefresh.setOnRefreshListener {
+            val savedUri = getSavedDirectoryUri()
+            if (savedUri != null) {
+                scanDirectory(savedUri)
+            } else {
+                Toast.makeText(this, "No folder selected. Please select a folder first.", Toast.LENGTH_SHORT).show()
+                binding.swipeRefresh.isRefreshing = false
+            }
         }
     }
     
@@ -269,52 +282,28 @@ class MainActivity : AppCompatActivity() {
         binding.btnScanFiles.alpha = if (enabled) 1.0f else 0.5f
     }
 
-    private fun hasStoragePermission(): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            Environment.isExternalStorageManager()
-        } else {
-            ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.READ_EXTERNAL_STORAGE
-            ) == PackageManager.PERMISSION_GRANTED
-        }
+    private fun saveDirectoryUri(uri: Uri) {
+        val sharedPrefs = getPreferences(MODE_PRIVATE)
+        sharedPrefs.edit().putString("start_directory_uri", uri.toString()).apply()
     }
 
-    private fun requestStoragePermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            showPermissionDialog()
-        } else {
-            permissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
-        }
+    private fun getSavedDirectoryUri(): Uri? {
+        val sharedPrefs = getPreferences(MODE_PRIVATE)
+        val uriString = sharedPrefs.getString("start_directory_uri", null)
+        return uriString?.let { Uri.parse(it) }
     }
 
-    private fun showPermissionDialog() {
-        AlertDialog.Builder(this)
-            .setTitle(getString(R.string.permission_required))
-            .setMessage("This app needs storage access to scan for dumpstate files. You can grant permission in Settings or use \"Browse Files\" to select files manually.")
-            .setPositiveButton(getString(R.string.grant_permission)) { _, _ ->
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                    val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
-                    intent.data = Uri.parse("package:$packageName")
-                    startActivity(intent)
-                }
-            }
-            .setNegativeButton("Use Browse") { _, _ ->
-                openFilePicker()
-            }
-            .show()
-    }
-
-    private fun scanForFiles() {
+    private fun scanDirectory(treeUri: Uri) {
         binding.tvStatus.text = getString(R.string.scanning_files)
         binding.tvStatus.visibility = View.VISIBLE
         
         lifecycleScope.launch {
             val files = withContext(Dispatchers.IO) {
-                findDumpstateFiles()
+                findDumpstateFilesV2(treeUri)
             }
             
             binding.tvStatus.visibility = View.GONE
+            binding.swipeRefresh.isRefreshing = false
             
             if (files.isNotEmpty()) {
                 showFileList(files)
@@ -324,56 +313,64 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun findDumpstateFiles(): List<FileInfo> {
+    private fun findDumpstateFilesV2(treeUri: Uri): List<FileInfo> {
         val files = mutableListOf<FileInfo>()
-        val seenPaths = mutableSetOf<String>()
         
-        // Common locations for dumpstate files (prioritized order)
-        val searchPaths = listOf(
-            File(Environment.getExternalStorageDirectory(), "log"),
-            File(Environment.getExternalStorageDirectory(), "Documents"),
-            File(Environment.getExternalStorageDirectory(), "Download")
-        )
-        
-        searchPaths.forEach { dir ->
-            if (dir.exists() && dir.isDirectory && dir.canRead()) {
-                try {
-                    dir.listFiles()?.forEach { file ->
-                        if (file.isFile && isDumpstateFile(file)) {
-                            val canonicalPath = try {
-                                file.canonicalPath
-                            } catch (e: Exception) {
-                                file.absolutePath
-                            }
-                            if (!seenPaths.contains(canonicalPath)) {
-                                seenPaths.add(canonicalPath)
-                                files.add(FileInfo(
-                                    path = file.absolutePath,
-                                    name = file.name,
-                                    sizeBytes = file.length(),
-                                    lastModified = file.lastModified()
-                                ))
-                            }
-                        }
+        try {
+            val dir = DocumentFile.fromTreeUri(this@MainActivity, treeUri)
+            if (dir != null && dir.isDirectory) {
+                // First pass: collect all valid files
+                val validFiles = dir.listFiles().filter { file ->
+                     file.isFile && isDumpstateFileV2(file)
+                }
+
+                // Second pass: filter duplicates (same name, diff extension)
+                // If we have "bugreport-123.txt" and "bugreport-123.zip", keep only the txt
+                val textFiles = validFiles.filter { 
+                    val name = it.name?.lowercase() ?: ""
+                    name.endsWith(".txt") || name.endsWith(".log")
+                }.mapNotNull { it.name?.substringBeforeLast(".") }
+                .toSet()
+
+                validFiles.forEach { file ->
+                    val name = file.name ?: return@forEach
+                    val extension = name.substringAfterLast(".", "").lowercase()
+                    val baseName = name.substringBeforeLast(".")
+                    
+                    val shouldAdd = if (extension == "zip") {
+                        // Only add zip if there is NO corresponding text file
+                        !textFiles.contains(baseName)
+                    } else {
+                        true
                     }
-                } catch (e: SecurityException) {
-                    // Ignore directories we can't access
+
+                    if (shouldAdd) {
+                        files.add(FileInfo(
+                            path = file.uri.toString(),
+                            name = name,
+                            sizeBytes = file.length(),
+                            lastModified = file.lastModified()
+                        ))
+                    }
                 }
             }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
         
-        // Sort by last modified (newest first)
         return files.sortedByDescending { it.lastModified }
     }
 
-    private fun isDumpstateFile(file: File): Boolean {
-        val name = file.name.lowercase()
+    private fun isDumpstateFileV2(file: DocumentFile): Boolean {
+        val name = file.name?.lowercase() ?: return false
         return ((name.startsWith("dumpstate") || 
                 name.startsWith("bugreport") ||
                 name.contains("dumpstate")) &&
                 (name.endsWith(".txt") || name.endsWith(".log") || name.endsWith(".zip")) &&
                 file.length() > 1024 * 1024) // At least 1MB
     }
+
+
 
     private fun showFileList(files: List<FileInfo>) {
         currentFiles = files

@@ -33,6 +33,10 @@ class DumpstateParser {
             "ACTION_BATTERY_CHANGED.*?level:(\\d+)"
         )
         private val TIMESTAMP_PATTERN = Pattern.compile("(\\d{4}-\\d{2}-\\d{2}\\s+\\d{2}:\\d{2}:\\d{2})")
+        
+        // Fallback SoC patterns
+        private val SOC_DEBUG_PATTERN = Pattern.compile("SOC\\((\\d+)\\)")
+        private val HEALTHD_LEVEL_PATTERN = Pattern.compile("healthd: battery.*?\\s+l=(\\d+)")
     }
     
     fun parse(inputStream: InputStream, progressCallback: ((Int) -> Unit)? = null): BatteryInfo {
@@ -196,12 +200,28 @@ class DumpstateParser {
                             stateOfCharge = socMatcher.group(1)?.toIntOrNull()
                         }
                     }
+
+                    // Parse SOC from debug logs e.g. "SOC(85)"
+                    if (stateOfCharge == null) {
+                        val socDebugMatcher = SOC_DEBUG_PATTERN.matcher(line)
+                        if (socDebugMatcher.find()) {
+                            stateOfCharge = socDebugMatcher.group(1)?.toIntOrNull()
+                        }
+                    }
                     
                     // Parse battery level (Sony/Generic) from "  level: 99"
                     if (stateOfCharge == null) {
                         val levelMatcher = BATTERY_LEVEL_PATTERN.matcher(line)
                         if (levelMatcher.find()) {
                             stateOfCharge = levelMatcher.group(1)?.toIntOrNull()
+                        }
+                    }
+
+                    // Parse battery level from healthd "l=85"
+                    if (stateOfCharge == null) {
+                        val healthdLevelMatcher = HEALTHD_LEVEL_PATTERN.matcher(line)
+                        if (healthdLevelMatcher.find()) {
+                            stateOfCharge = healthdLevelMatcher.group(1)?.toIntOrNull()
                         }
                     }
                     

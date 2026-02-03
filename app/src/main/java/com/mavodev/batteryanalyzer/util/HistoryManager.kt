@@ -88,6 +88,25 @@ class HistoryManager(context: Context) {
         return getAllEntries().size
     }
     
+    /**
+     * Import entries from a backup, replacing all existing entries
+     */
+    fun importEntries(entries: List<HistoryEntry>) {
+        saveEntries(entries)
+    }
+    
+    /**
+     * Export all entries as a JSON string
+     */
+    fun exportAllEntries(): String {
+        val entries = getAllEntries()
+        val jsonArray = JSONArray()
+        entries.forEach { entry ->
+            jsonArray.put(entry.toJson())
+        }
+        return jsonArray.toString()
+    }
+    
     private fun saveEntries(entries: List<HistoryEntry>) {
         val jsonArray = JSONArray()
         entries.forEach { entry ->

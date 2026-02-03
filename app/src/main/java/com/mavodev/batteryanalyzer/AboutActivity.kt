@@ -2,6 +2,10 @@ package com.mavodev.batteryanalyzer
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowCompat
+import android.graphics.Color
 import com.mavodev.batteryanalyzer.databinding.ActivityAboutBinding
 
 class AboutActivity : AppCompatActivity() {
@@ -9,9 +13,18 @@ class AboutActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        window.statusBarColor = getColor(R.color.blue_700)
+        // Enable edge-to-edge
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        window.statusBarColor = Color.TRANSPARENT
+
         binding = ActivityAboutBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        
+        ViewCompat.setOnApplyWindowInsetsListener(binding.toolbar) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(v.paddingLeft, v.paddingTop + systemBars.top, v.paddingRight, v.paddingBottom)
+            insets
+        }
         
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
@@ -25,7 +38,7 @@ class AboutActivity : AppCompatActivity() {
             val versionName = packageInfo.versionName
             
             binding.tvVersion.text = "Version $versionName"
-            binding.tvBuildDate.text = "Build Date: January 22, 2026"
+            binding.tvBuildDate.text = "Build Date: February 3, 2026"
         } catch (e: Exception) {
             binding.tvVersion.text = "Version information unavailable"
         }

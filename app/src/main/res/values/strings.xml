@@ -4,6 +4,7 @@
     <string name="instructions">Tap "Detect Files" to automatically find dumpstate files, or use "Browse Files" to select manually from your device\'s internal storage.</string>
     <string name="scan_for_files">Detect Files</string>
     <string name="browse_files">Browse Files</string>
+    <string name="select_folder">Select Folder</string>
     <string name="select_dumpstate_file">Select Dumpstate File</string>
     <string name="available_files">Available Dumpstate Files</string>
     <string name="no_files_found">No dumpstate files found. Try \"Browse Files\" to select manually.</string>
@@ -39,9 +40,9 @@
     <!-- Help Dialog -->
     <string name="help_title">How to Create Dumpstate File</string>
     <string name="help_samsung_title">Samsung Devices:</string>
-    <string name="help_samsung_instructions">1. Open the Phone app\n2. Dial *#9900#\n3. Tap \"Run dumpstate/logcat\"\n4. Wait for completion\n5. Files are saved to /log folder\n6. Use this app to analyze</string>
+    <string name="help_samsung_instructions">1. Open the Phone app\n2. Dial *#9900#\n3. Tap \"Run dumpstate/logcat\" and wait for completion\n4. Tap \"Copy to sdcard\"\n5. Files are saved to /log folder\n6. Use this app to analyze</string>
     <string name="help_sony_title">Other devices (tested on Sony):</string>
-    <string name="help_sony_instructions">1. Go to Settings → About phone\n2. Tap \"Build number\" 7 times to enable Developer options\n3. Go to Settings → System → Developer options\n4. Tap \"Take bug report\"\n5. Select \"Full report\"\n6. Wait for notification\n7. Files are saved as ZIP\n8. Use this app to analyze</string>
+    <string name="help_sony_instructions">1. Go to Settings → About phone\n2. Tap \"Build number\" 7 times to enable Developer options\n3. Go to Settings → System → Developer options\n4. Tap \"Take bug report\"\n5. Select \"Full report\"\n6. Wait for notification\n7. Tap on notification and save file as ZIP\n8. Use this app to analyze</string>
     <string name="help_close">Close</string>
     
     <!-- Menu -->
@@ -62,6 +63,13 @@
     <string name="settings_cancel">Cancel</string>
     <string name="settings_cleared">Design capacity cleared</string>
     <string name="settings_saved">Design capacity saved</string>
+    <string name="export_data">Export Data</string>
+    <string name="import_data">Import Data</string>
+    <string name="export_success">Data exported successfully</string>
+    <string name="import_success">Data imported successfully</string>
+    <string name="import_error">Error importing data: %1$s</string>
+    <string name="import_confirm_title">Import Data?</string>
+    <string name="import_confirm_message">This will replace all current settings and history. This action cannot be undone.</string>
     
     <!-- About -->
     <string name="about_title">About</string>
