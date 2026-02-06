@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Battery Analyzer</string>
-    <string name="instructions">Tap "Detect Files" to automatically find dumpstate files, or use "Browse Files" to select manually from your device\'s internal storage.</string>
+    <string name="instructions">Select a folder to automatically find dumpstate files or use "Browse Files" to select manually from your device\'s internal storage.</string>
     <string name="scan_for_files">Detect Files</string>
     <string name="browse_files">Browse Files</string>
     <string name="select_folder">Select Folder</string>
