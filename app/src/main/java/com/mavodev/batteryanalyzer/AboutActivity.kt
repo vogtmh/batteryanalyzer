@@ -38,7 +38,7 @@ class AboutActivity : AppCompatActivity() {
             val versionName = packageInfo.versionName
             
             binding.tvVersion.text = "Version $versionName"
-            binding.tvBuildDate.text = "Build Date: February 6, 2026"
+            binding.tvBuildDate.text = "Build Date: February 9, 2026"
         } catch (e: Exception) {
             binding.tvVersion.text = "Version information unavailable"
         }

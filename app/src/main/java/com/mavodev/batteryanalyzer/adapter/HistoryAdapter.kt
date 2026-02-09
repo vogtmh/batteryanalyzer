@@ -18,6 +18,7 @@ import java.util.*
 sealed class HistoryListItem {
     data class ChartItem(val entries: List<HistoryEntry>) : HistoryListItem()
     data class EntryItem(val entry: HistoryEntry) : HistoryListItem()
+    data class ReplacementHeader(val newBatteryDate: String) : HistoryListItem()
 }
 
 class HistoryAdapter(
@@ -27,12 +28,14 @@ class HistoryAdapter(
     companion object {
         private const val VIEW_TYPE_CHART = 0
         private const val VIEW_TYPE_ENTRY = 1
+        private const val VIEW_TYPE_REPLACEMENT = 2
     }
 
     override fun getItemViewType(position: Int): Int {
         return when (getItem(position)) {
             is HistoryListItem.ChartItem -> VIEW_TYPE_CHART
             is HistoryListItem.EntryItem -> VIEW_TYPE_ENTRY
+            is HistoryListItem.ReplacementHeader -> VIEW_TYPE_REPLACEMENT
         }
     }
 
@@ -54,6 +57,11 @@ class HistoryAdapter(
                 )
                 HistoryViewHolder(binding)
             }
+            VIEW_TYPE_REPLACEMENT -> {
+                val view = LayoutInflater.from(parent.context)
+                    .inflate(R.layout.item_battery_replacement, parent, false)
+                ReplacementViewHolder(view)
+            }
             else -> throw IllegalArgumentException("Unknown view type")
         }
     }
@@ -62,7 +70,45 @@ class HistoryAdapter(
         when (val item = getItem(position)) {
             is HistoryListItem.ChartItem -> (holder as ChartViewHolder).bind(item.entries)
             is HistoryListItem.EntryItem -> (holder as HistoryViewHolder).bind(item.entry)
+            is HistoryListItem.ReplacementHeader -> (holder as ReplacementViewHolder).bind(item.newBatteryDate)
         }
+    }
+    
+    fun submitHistoryList(entries: List<HistoryEntry>) {
+        if (entries.isEmpty()) {
+            submitList(emptyList())
+            return
+        }
+        
+        val items = mutableListOf<HistoryListItem>()
+        
+        // Add chart
+        items.add(HistoryListItem.ChartItem(entries))
+        
+        // Process entries and detect replacements
+        // Entries are sorted by timestamp descending (newest first)
+        
+        // Add newest entry
+        items.add(HistoryListItem.EntryItem(entries[0]))
+        
+        for (i in 1 until entries.size) {
+            val currentEntry = entries[i]
+            val previousEntry = entries[i - 1] // The newer entry we just processed
+            
+            // Check if first use date changed
+            // If previous (newer) has date A and current (older) has date B
+            // Then a replacement happened between them (at date A)
+            val currentDate = currentEntry.firstUseDate
+            val previousDate = previousEntry.firstUseDate
+            
+            if (currentDate != null && previousDate != null && currentDate != previousDate) {
+                items.add(HistoryListItem.ReplacementHeader(previousDate))
+            }
+            
+            items.add(HistoryListItem.EntryItem(currentEntry))
+        }
+        
+        submitList(items)
     }
 
     class ChartViewHolder(
@@ -73,6 +119,26 @@ class HistoryAdapter(
             binding.chartView.setData(entries)
         }
     }
+    class ReplacementViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        private val tvBatteryReplaced: android.widget.TextView = itemView.findViewById(R.id.tvBatteryReplaced)
+        
+        fun bind(date: String) {
+            // date is YYYY-MM-DD
+            try {
+                val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                val outputFormat = SimpleDateFormat("MMMM d, yyyy", Locale.getDefault())
+                val parsedDate = inputFormat.parse(date)
+                if (parsedDate != null) {
+                    val formattedDate = outputFormat.format(parsedDate)
+                    tvBatteryReplaced.text = "Battery Replaced on $formattedDate"
+                } else {
+                     tvBatteryReplaced.text = "Battery Replaced on $date"
+                }
+            } catch (e: Exception) {
+                tvBatteryReplaced.text = "Battery Replaced on $date"
+            }
+        }
+    }
 
     inner class HistoryViewHolder(
         private val binding: ItemHistoryBinding
@@ -81,23 +147,24 @@ class HistoryAdapter(
         private var isExpanded = false
 
         fun bind(entry: HistoryEntry) {
-            binding.tvDeviceModel.text = entry.deviceModel ?: "Unknown Device"
-
-            // Set health in subtitle
+            // Set health as title
             if (entry.healthPercentage != null) {
                 val df = DecimalFormat("#.#")
-                binding.tvHealthPercentage.text = "${df.format(entry.healthPercentage)}%"
-                binding.tvHealthPercentage.setTextColor(getHealthColor(entry.healthPercentage))
+                val text = "${df.format(entry.healthPercentage)}%"
+                // Add device model as well? User said "replace it", so just health.
+                // But maybe "Health: 98%"? User said "98.5%".
+                binding.tvHealthTitle.text = text
+                binding.tvHealthTitle.setTextColor(getHealthColor(entry.healthPercentage))
             } else {
-                binding.tvHealthPercentage.text = "N/A"
-                binding.tvHealthPercentage.setTextColor(
+                binding.tvHealthTitle.text = "N/A"
+                binding.tvHealthTitle.setTextColor(
                     ContextCompat.getColor(binding.root.context, android.R.color.darker_gray)
                 )
             }
 
             // Set logfile date in subtitle
             if (entry.logfileTimestamp != null) {
-                binding.tvLogfileDate.text = "• ${entry.logfileTimestamp}"
+                binding.tvLogfileDate.text = entry.logfileTimestamp
                 binding.tvLogfileDate.visibility = View.VISIBLE
             } else {
                 binding.tvLogfileDate.visibility = View.GONE
@@ -177,6 +244,8 @@ class HistoryAdapter(
                 oldItem is HistoryListItem.ChartItem && newItem is HistoryListItem.ChartItem -> true
                 oldItem is HistoryListItem.EntryItem && newItem is HistoryListItem.EntryItem -> 
                     oldItem.entry.id == newItem.entry.id
+                oldItem is HistoryListItem.ReplacementHeader && newItem is HistoryListItem.ReplacementHeader ->
+                    oldItem.newBatteryDate == newItem.newBatteryDate
                 else -> false
             }
         }

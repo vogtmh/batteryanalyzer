@@ -21,7 +21,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="?attr/colorPrimary"
-            android:fitsSystemWindows="true"
             android:minHeight="?attr/actionBarSize"
             android:theme="@style/ThemeOverlay.Material3.Dark"
             app:titleTextColor="?attr/colorOnPrimary"
@@ -40,7 +39,10 @@
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="16dp">
+                android:paddingStart="16dp"
+                android:paddingTop="16dp"
+                android:paddingEnd="16dp"
+                android:paddingBottom="16dp">
 
             <!-- Instructions -->
             <TextView

@@ -19,7 +19,9 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
+import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.mavodev.batteryanalyzer.adapter.FileListAdapter
@@ -70,7 +72,7 @@ class MainActivity : AppCompatActivity() {
             scanDirectory(it)
         }
     }
-
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
@@ -91,6 +93,12 @@ class MainActivity : AppCompatActivity() {
         
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.toolbar) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(v.paddingLeft, systemBars.top, v.paddingRight, v.paddingBottom)
+            insets
+        }
 
         historyManager = HistoryManager(this)
         setupToolbar()
@@ -742,14 +750,14 @@ class MainActivity : AppCompatActivity() {
         val statusText = getHealthStatusText(healthPercentage)
         binding.tvHealthStatus.text = statusText
         if (healthPercentage != null) {
-            binding.tvHealthStatus.setBackgroundColor(
-                getHealthBackgroundColor(healthPercentage)
-            )
+             val color = getHealthBackgroundColor(healthPercentage)
+             val background = binding.tvHealthStatus.background as? android.graphics.drawable.GradientDrawable
+             background?.setColor(color)
         } else {
             // Show gray background for unreliable health
-            binding.tvHealthStatus.setBackgroundColor(
-                ContextCompat.getColor(this, android.R.color.darker_gray)
-            )
+            val color = ContextCompat.getColor(this, android.R.color.darker_gray)
+            val background = binding.tvHealthStatus.background as? android.graphics.drawable.GradientDrawable
+            background?.setColor(color)
         }
         
         // Device Model

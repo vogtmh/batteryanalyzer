@@ -21,7 +21,8 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
 
             <LinearLayout
                 android:layout_width="0dp"
@@ -29,40 +30,25 @@
                 android:layout_weight="1"
                 android:orientation="vertical">
 
-                <!-- Device Model -->
+                <!-- Health Percentage as Title -->
                 <TextView
-                    android:id="@+id/tvDeviceModel"
+                    android:id="@+id/tvHealthTitle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="16sp"
+                    android:textSize="20sp"
                     android:textStyle="bold"
-                    android:textColor="?android:attr/textColorPrimary"
-                    tools:text="Samsung SM-S928B" />
+                    tools:text="100%"
+                    tools:textColor="@color/health_excellent"/>
 
-                <!-- Subtitle with Health and Logfile Date -->
-                <LinearLayout
+                <!-- Logfile Date Subtitle -->
+                <TextView
+                    android:id="@+id/tvLogfileDate"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:id="@+id/tvHealthPercentage"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        tools:text="100%" />
-
-                    <TextView
-                        android:id="@+id/tvLogfileDate"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
-                        android:textSize="12sp"
-                        android:textColor="?android:attr/textColorSecondary"
-                        tools:text="• Jan 21, 2026 4:06 PM" />
-                </LinearLayout>
+                    android:textSize="12sp"
+                    android:textColor="?android:attr/textColorSecondary"
+                    tools:text="Jan 21, 2026 4:06 PM" />
             </LinearLayout>
 
             <!-- Expand/Collapse Arrow -->
@@ -84,7 +70,7 @@
                 android:src="@android:drawable/ic_menu_delete"
                 android:padding="8dp"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
-                android:tint="?android:attr/textColorSecondary"
+                app:tint="?android:attr/textColorSecondary"
                 android:contentDescription="@string/history_delete" />
         </LinearLayout>
 
@@ -98,142 +84,126 @@
             android:background="?android:attr/dividerHorizontal"
             android:visibility="gone" />
 
-        <!-- Battery Info Grid -->
+        <!-- Battery Info List (Single Column) -->
         <LinearLayout
             android:id="@+id/detailsLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
+            android:orientation="vertical"
             android:visibility="gone">
 
-            <!-- Left Column -->
+            <!-- Current Capacity -->
             <LinearLayout
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
+                android:orientation="horizontal"
+                android:paddingVertical="4dp">
 
-                <!-- Current Capacity -->
-                <LinearLayout
-                    android:layout_width="match_parent"
+                <TextView
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="4dp">
+                    android:layout_weight="1"
+                    android:text="@string/current_capacity"
+                    android:textSize="14sp" />
 
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/current_capacity"
-                        android:textSize="14sp" />
-
-                    <TextView
-                        android:id="@+id/tvCurrentCapacity"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="14sp"
-                        tools:text="4937 mAh" />
-                </LinearLayout>
-
-                <!-- Design Capacity -->
-                <LinearLayout
-                    android:layout_width="match_parent"
+                <TextView
+                    android:id="@+id/tvCurrentCapacity"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/design_capacity"
-                        android:textSize="14sp" />
-
-                    <TextView
-                        android:id="@+id/tvDesignCapacity"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="14sp"
-                        tools:text="5000 mAh" />
-                </LinearLayout>
+                    android:textSize="14sp"
+                    tools:text="4937 mAh" />
             </LinearLayout>
 
-            <!-- Right Column -->
+            <!-- Design Capacity -->
             <LinearLayout
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginStart="16dp"
-                android:orientation="vertical">
+                android:orientation="horizontal"
+                android:paddingVertical="4dp">
 
-                <!-- Cycle Count -->
-                <LinearLayout
-                    android:layout_width="match_parent"
+                <TextView
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="4dp">
+                    android:layout_weight="1"
+                    android:text="@string/design_capacity"
+                    android:textSize="14sp" />
 
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/cycle_count"
-                        android:textSize="14sp" />
-
-                    <TextView
-                        android:id="@+id/tvCycleCount"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="14sp"
-                        tools:text="438" />
-                </LinearLayout>
-
-                <!-- State of Charge -->
-                <LinearLayout
-                    android:id="@+id/socLayout"
-                    android:layout_width="match_parent"
+                <TextView
+                    android:id="@+id/tvDesignCapacity"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="4dp">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/state_of_charge"
-                        android:textSize="14sp" />
-
-                    <TextView
-                        android:id="@+id/tvStateOfCharge"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="14sp"
-                        tools:text="57%" />
-                </LinearLayout>
-
-                <!-- First Use Date -->
-                <LinearLayout
-                    android:id="@+id/firstUseLayout"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="First Used:"
-                        android:textSize="12sp"
-                        android:textColor="?android:attr/textColorSecondary" />
-
-                    <TextView
-                        android:id="@+id/tvFirstUseDate"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textSize="12sp"
-                        android:textColor="?android:attr/textColorSecondary"
-                        tools:text="Mar 13, 2024" />
-                </LinearLayout>
+                    android:textSize="14sp"
+                    tools:text="5000 mAh" />
             </LinearLayout>
+            
+            <!-- Cycle Count -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingVertical="4dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/cycle_count"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/tvCycleCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="14sp"
+                    tools:text="438" />
+            </LinearLayout>
+
+            <!-- State of Charge -->
+            <LinearLayout
+                android:id="@+id/socLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingVertical="4dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/state_of_charge"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/tvStateOfCharge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="14sp"
+                    tools:text="57%" />
+            </LinearLayout>
+
+            <!-- First Use Date -->
+            <LinearLayout
+                android:id="@+id/firstUseLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingVertical="4dp">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="First Used"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/tvFirstUseDate"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="14sp"
+                    tools:text="Mar 13, 2024" />
+            </LinearLayout>
+
         </LinearLayout>
 
     </LinearLayout>

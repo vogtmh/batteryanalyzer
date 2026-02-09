@@ -66,20 +66,7 @@ class HistoryActivity : AppCompatActivity() {
             binding.emptyState.visibility = View.GONE
             binding.rvHistory.visibility = View.VISIBLE
             
-            // Build list with chart as first item if we have health data
-            val listItems = mutableListOf<HistoryListItem>()
-            
-            val entriesWithHealth = entries.filter { it.healthPercentage != null }
-            if (entriesWithHealth.size >= 2) {
-                listItems.add(HistoryListItem.ChartItem(entries))
-            }
-            
-            // Add all history entries
-            entries.forEach { entry ->
-                listItems.add(HistoryListItem.EntryItem(entry))
-            }
-            
-            historyAdapter.submitList(listItems)
+            historyAdapter.submitHistoryList(entries)
         }
     }
 
