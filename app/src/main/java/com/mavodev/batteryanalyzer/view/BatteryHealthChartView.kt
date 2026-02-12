@@ -60,6 +60,18 @@ class BatteryHealthChartView @JvmOverloads constructor(
         pathEffect = DashPathEffect(floatArrayOf(10f, 10f), 0f)
     }
     
+    // Paints for Calculated Health
+    private val calculatedLinePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        strokeWidth = 4f
+        color = 0xFF9E9E9E.toInt() // Gray
+    }
+    
+    private val calculatedPointPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.FILL
+        color = 0xFF9E9E9E.toInt() // Gray
+    }
+    
     private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         textSize = 28f
     }
@@ -77,7 +89,7 @@ class BatteryHealthChartView @JvmOverloads constructor(
     fun setData(historyEntries: List<HistoryEntry>) {
         // Filter entries with valid health percentage and sort by timestamp
         entries = historyEntries
-            .filter { it.healthPercentage != null }
+            .filter { it.healthPercentage != null || it.calculatedHealthPercentage != null }
             .sortedBy { it.timestamp }
         
         // Update colors based on latest health
@@ -112,6 +124,7 @@ class BatteryHealthChartView @JvmOverloads constructor(
         }
         
         drawChart(canvas)
+        drawLegend(canvas)
     }
     
     private fun drawEmptyState(canvas: Canvas) {
@@ -157,9 +170,12 @@ class BatteryHealthChartView @JvmOverloads constructor(
         canvas.drawText(title, (width - titleWidth) / 2, 50f, titlePaint)
         
         // Calculate min/max for better scaling
-        val healthValues = entries.mapNotNull { it.healthPercentage }
+        val healthValues = entries.mapNotNull { it.healthPercentage } + 
+                          entries.mapNotNull { it.calculatedHealthPercentage }
+        if (healthValues.isEmpty()) return
+        
         val minHealth = max(60.0, healthValues.minOrNull()!! - 5)
-        val maxHealth = min(100.0, healthValues.maxOrNull()!! + 5)
+        val maxHealth = min(110.0, healthValues.maxOrNull()!! + 5)
         val healthRange = maxHealth - minHealth
         
         if (healthRange < 0.1) return
@@ -194,43 +210,65 @@ class BatteryHealthChartView @JvmOverloads constructor(
             canvas.drawText(label, leftPadding - labelWidth - 15f, y + 8f, textPaint)
         }
         
-        // Create path for line and fill
+        // Create path for line and fill (Reported)
         val linePath = Path()
         val fillPath = Path()
-        
-        val points = mutableListOf<Pair<Float, Float>>()
+        val reportedPoints = mutableListOf<Pair<Float, Float>>()
+
+        // Create path for Calculated line
+        val calculatedLinePath = Path()
+        val calculatedPoints = mutableListOf<Pair<Float, Float>>()
         
         entries.forEachIndexed { index, entry ->
-            val health = entry.healthPercentage ?: return@forEachIndexed
-            
             val x = leftPadding + (chartWidth * index / (entries.size - 1))
-            val y = topPadding + chartHeight * (1 - (health - minHealth) / healthRange)
             
-            points.add(Pair(x, y.toFloat()))
-            
-            if (index == 0) {
-                linePath.moveTo(x, y.toFloat())
-                fillPath.moveTo(x, height - bottomPadding)
-                fillPath.lineTo(x, y.toFloat())
-            } else {
-                linePath.lineTo(x, y.toFloat())
-                fillPath.lineTo(x, y.toFloat())
+            // Reported Point
+            entry.healthPercentage?.let { health ->
+                val y = topPadding + chartHeight * (1 - (health - minHealth) / healthRange)
+                reportedPoints.add(Pair(x, y.toFloat()))
+                
+                if (reportedPoints.size == 1) {
+                    linePath.moveTo(x, y.toFloat())
+                    fillPath.moveTo(x, height - bottomPadding)
+                    fillPath.lineTo(x, y.toFloat())
+                } else {
+                    linePath.lineTo(x, y.toFloat())
+                    fillPath.lineTo(x, y.toFloat())
+                }
+            }
+
+            // Calculated Point
+            entry.calculatedHealthPercentage?.let { health ->
+                val y = topPadding + chartHeight * (1 - (health - minHealth) / healthRange)
+                calculatedPoints.add(Pair(x, y.toFloat()))
+                
+                if (calculatedPoints.size == 1) {
+                    calculatedLinePath.moveTo(x, y.toFloat())
+                } else {
+                    calculatedLinePath.lineTo(x, y.toFloat())
+                }
             }
         }
         
-        // Complete fill path
-        fillPath.lineTo(points.last().first, height - bottomPadding)
-        fillPath.close()
+        // Draw fill (Reported)
+        if (reportedPoints.isNotEmpty()) {
+            fillPath.lineTo(reportedPoints.last().first, height - bottomPadding)
+            fillPath.close()
+            canvas.drawPath(fillPath, fillPaint)
+        }
         
-        // Draw fill
-        canvas.drawPath(fillPath, fillPaint)
+        // Draw Calculated line
+        canvas.drawPath(calculatedLinePath, calculatedLinePaint)
         
-        // Draw line
+        // Draw Reported line
         canvas.drawPath(linePath, linePaint)
         
         // Draw points
-        points.forEach { (x, y) ->
+        reportedPoints.forEach { (x, y) ->
             canvas.drawCircle(x, y, 6f, pointPaint)
+        }
+        calculatedPoints.forEach { (x, y) ->
+            canvas.drawCircle(x, y, 4f, calculatedPointPaint)
         }
         
         // Draw X-axis labels (dates)
@@ -269,6 +307,26 @@ class BatteryHealthChartView @JvmOverloads constructor(
             
             val trendWidth = trendPaint.measureText(trendText)
             canvas.drawText(trendText, width - rightPadding - trendWidth, 50f, trendPaint)
+        }
+    }
+    
+    private fun drawLegend(canvas: Canvas) {
+        val legendY = 85f
+        val legendItemWidth = 160f
+        var currentX = leftPadding
+        
+        // Reported Legend
+        val reportedLabel = "Reported"
+        canvas.drawCircle(currentX + 10f, legendY - 10f, 6f, pointPaint)
+        canvas.drawText(reportedLabel, currentX + 25f, legendY, textPaint)
+        
+        currentX += legendItemWidth
+        
+        // Calculated Legend (if data exists)
+        if (entries.any { it.calculatedHealthPercentage != null }) {
+            val calculatedLabel = "Calculated"
+            canvas.drawCircle(currentX + 10f, legendY - 10f, 5f, calculatedPointPaint)
+            canvas.drawText(calculatedLabel, currentX + 25f, legendY, textPaint)
         }
     }
     

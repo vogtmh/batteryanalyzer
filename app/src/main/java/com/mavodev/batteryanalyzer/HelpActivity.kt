@@ -8,6 +8,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowCompat
 import android.graphics.Color
+import androidx.core.text.HtmlCompat
 import com.mavodev.batteryanalyzer.databinding.ActivityHelpBinding
 
 class HelpActivity : AppCompatActivity() {
@@ -33,6 +34,11 @@ class HelpActivity : AppCompatActivity() {
 
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        
+        binding.tvHealthExplanation.text = HtmlCompat.fromHtml(
+            getString(R.string.help_health_content), 
+            HtmlCompat.FROM_HTML_MODE_LEGACY
+        )
     }
 
     override fun onSupportNavigateUp(): Boolean {

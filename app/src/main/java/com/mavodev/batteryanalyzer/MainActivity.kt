@@ -22,6 +22,7 @@ import androidx.core.view.GravityCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.text.HtmlCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.mavodev.batteryanalyzer.adapter.FileListAdapter
@@ -158,6 +159,13 @@ class MainActivity : AppCompatActivity() {
         // Check if we have a saved directory
         updateDetectFilesButton(true)
         if (isFirstLaunch) {
+            val sharedPrefs = getPreferences(MODE_PRIVATE)
+            val isFirstRun = sharedPrefs.getBoolean(getString(R.string.pref_first_run), true)
+            if (isFirstRun) {
+                startActivity(Intent(this, HelpActivity::class.java))
+                sharedPrefs.edit().putBoolean(getString(R.string.pref_first_run), false).apply()
+            }
+            
             val savedUri = getSavedDirectoryUri()
             if (savedUri != null) {
                 scanDirectory(savedUri)
@@ -270,6 +278,10 @@ class MainActivity : AppCompatActivity() {
         
         binding.btnSelectFile.setOnClickListener {
             openFilePicker()
+        }
+
+        binding.btnHealthHelp.setOnClickListener {
+            startActivity(Intent(this, HelpActivity::class.java))
         }
     }
     
@@ -683,6 +695,16 @@ class MainActivity : AppCompatActivity() {
             binding.tvHealthPercentage.setTextColor(ContextCompat.getColor(this, android.R.color.darker_gray))
         }
 
+        // Calculated Health
+        val calculatedHealth = batteryInfo.calculatedHealthPercentage
+        if (calculatedHealth != null && (calculatedHealth != healthPercentage)) {
+            binding.layoutCalculatedHealth.visibility = View.VISIBLE
+            val df = DecimalFormat("#.#")
+            binding.tvCalculatedHealth.text = "${df.format(calculatedHealth)}%"
+        } else {
+            binding.layoutCalculatedHealth.visibility = View.GONE
+        }
+
         // Current Capacity
         if (batteryInfo.currentCapacityMah != null) {
             binding.tvCurrentCapacity.text = getString(
@@ -851,7 +873,6 @@ class MainActivity : AppCompatActivity() {
     }
     
     private fun showHelpDialog() {
-        val dialogView = layoutInflater.inflate(android.R.layout.simple_list_item_1, null)
         
         val message = buildString {
             append(getString(R.string.help_samsung_title))

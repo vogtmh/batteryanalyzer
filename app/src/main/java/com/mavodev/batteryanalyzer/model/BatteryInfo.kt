@@ -10,6 +10,7 @@ data class BatteryInfo(
     val designCapacityMah: Int? = null,
     val fullChargeCapacityMah: Int? = null,
     val healthPercentage: Double? = null,
+    val calculatedHealthPercentage: Double? = null,
     val firstUseDate: String? = null,
     val stateOfCharge: Int? = null,
     val logfileTimestamp: String? = null,

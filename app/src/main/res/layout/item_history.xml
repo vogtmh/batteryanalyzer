@@ -92,6 +92,30 @@
             android:orientation="vertical"
             android:visibility="gone">
 
+            <!-- Calculated Health -->
+            <LinearLayout
+                android:id="@+id/calculatedHealthLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingVertical="4dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/calculated_health_label"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/tvCalculatedHealth"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="14sp"
+                    tools:text="98.2%" />
+            </LinearLayout>
+
             <!-- Current Capacity -->
             <LinearLayout
                 android:layout_width="match_parent"

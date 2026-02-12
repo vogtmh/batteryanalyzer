@@ -19,6 +19,7 @@
     <string name="current_capacity">Current Capacity:</string>
     <string name="design_capacity">Design Capacity:</string>
     <string name="capacity_loss">Capacity Loss:</string>
+    <string name="calculated_health_label">Calculated Health:</string>
     <string name="state_of_charge">State of Charge (SoC):</string>
     <string name="cycle_count">Cycle Count:</string>
     <string name="first_use_date">First Use Date:</string>
@@ -38,11 +39,15 @@
     <string name="not_available">N/A</string>
     
     <!-- Help Dialog -->
-    <string name="help_title">How to Create Dumpstate File</string>
+    <string name="help_title">Help</string>
     <string name="help_samsung_title">Samsung Devices:</string>
     <string name="help_samsung_instructions">1. Open the Phone app\n2. Dial *#9900#\n3. Tap \"Run dumpstate/logcat\" and wait for completion\n4. Tap \"Copy to sdcard\"\n5. Files are saved to /log folder\n6. Use this app to analyze</string>
     <string name="help_sony_title">Other devices (tested on Sony):</string>
     <string name="help_sony_instructions">1. Go to Settings → About phone\n2. Tap \"Build number\" 7 times to enable Developer options\n3. Go to Settings → System → Developer options\n4. Tap \"Take bug report\"\n5. Select \"Full report\"\n6. Wait for notification\n7. Tap on notification and save file as ZIP\n8. Use this app to analyze</string>
+    
+    <string name="help_health_title">Battery Health Explanation</string>
+    <string name="help_health_content" formatted="false"><![CDATA[<b>Official Health:</b><br/>This is the value reported by your device\'s system (e.g., Samsung\'s ASOC). Manufacturers often use software smoothing or buffers to keep this at 100% for new devices even if the raw capacity varies slightly.<br/><br/><b>Calculated Health:</b><br/>This is the raw result of (Current Capacity / Design Capacity). It provides a more immediate look at the hardware state but may occasionally exceed 100% due to manufacturer over-capacity or battery manufacturing tolerances (e.g., a "5000 mAh" battery might actually hold 5100 mAh when brand new).<br/><br/>If the two values differ significantly, it usually means the system is still calibrating the official health metric.]]></string>
+    
     <string name="help_close">Close</string>
     
     <!-- Menu -->
@@ -89,4 +94,5 @@
     <string name="history_delete_confirm">Delete</string>
     <string name="history_saved">Result saved to history</string>
     <string name="history_duplicate">Duplicate result not saved</string>
+    <string name="pref_first_run">is_first_run</string>
 </resources>

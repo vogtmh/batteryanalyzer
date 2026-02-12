@@ -18,6 +18,13 @@ data class HistoryEntry(
     val firstUseDate: String?
 ) : Parcelable {
     
+    val calculatedHealthPercentage: Double?
+        get() {
+            return if (currentCapacityMah != null && designCapacityMah != null && designCapacityMah > 0) {
+                (currentCapacityMah.toDouble() / designCapacityMah.toDouble()) * 100.0
+            } else null
+        }
+    
     companion object {
         fun fromBatteryInfo(batteryInfo: BatteryInfo): HistoryEntry {
             val timestamp = System.currentTimeMillis()

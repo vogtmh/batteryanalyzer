@@ -181,6 +181,15 @@ class HistoryAdapter(
             } else {
                 binding.tvDesignCapacity.text = "N/A"
             }
+            
+            if (entry.calculatedHealthPercentage != null && 
+                entry.calculatedHealthPercentage != entry.healthPercentage) {
+                val df = DecimalFormat("#.#")
+                binding.tvCalculatedHealth.text = "${df.format(entry.calculatedHealthPercentage)}%"
+                binding.calculatedHealthLayout.visibility = View.VISIBLE
+            } else {
+                binding.calculatedHealthLayout.visibility = View.GONE
+            }
 
             if (entry.cycleCount != null) {
                 binding.tvCycleCount.text = "${entry.cycleCount}"

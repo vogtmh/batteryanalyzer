@@ -29,6 +29,23 @@ class DumpstateParser {
         private val DEVICE_BRAND_PATTERN = Pattern.compile("\\[ro\\.product\\.brand\\]:\\s*\\[(.+?)\\]")
         private val DEVICE_MODEL_PATTERN = Pattern.compile("\\[ro\\.product\\.model\\]:\\s*\\[(.+?)\\]")
         
+        // New Samsung S24 Support
+        private val SS_BATT_INFO_ASOC_PATTERN = Pattern.compile("\\[SS\\]\\[BattInfo\\]AsocData.*?efsValue:(\\d+)")
+        private val SS_BATT_INFO_DISCHARGE_PATTERN = Pattern.compile("\\[SS\\]\\[BattInfo\\]DischargeLevelData efsValue:(\\d+)")
+        private val SS_BATT_INFO_DISCHARGE_MAX_PATTERN = Pattern.compile("maxDischargeLevel:(\\d+)")
+        private val SS_BATT_INFO_CYCLE_STR_PATTERN = Pattern.compile("cycleStr:(\\d+)")
+        private val SS_BATT_INFO_FIRST_USE_PATTERN = Pattern.compile("\\[SS\\]\\[BattInfo\\]FirstUseDateData.*?efsValue:(\\d{8})")
+        private val SECTION_HEADER_PATTERN = Pattern.compile("^------ (.*?) ------$")
+        
+        private val IGNORED_SECTIONS = listOf(
+            "LAST KMSG",
+            "LAST LOGCAT",
+            "DLOG HISTORY",
+            "SYSTEM LOG",
+            "EVENT LOG",
+            "RADIO LOG"
+        )
+        
         private val BATTERY_CHANGED_PATTERN = Pattern.compile(
             "ACTION_BATTERY_CHANGED.*?level:(\\d+)"
         )
@@ -50,6 +67,7 @@ class DumpstateParser {
         var deviceBrand: String? = null
         var deviceModel: String? = null
         var hasReliableCapacity = false // Track if we have Samsung CAP_NOM
+        var directHealthPercentage: Double? = null
         val batteryChanges = mutableListOf<BatteryLevelChange>()
         val errors = mutableListOf<String>()
         
@@ -57,10 +75,23 @@ class DumpstateParser {
             val reader = BufferedReader(inputStream.reader())
             var lineCount = 0
             var lastTimestamp = ""
+            var currentSection = ""
+            var skipCurrentSection = false
             
             reader.useLines { lines ->
                 lines.forEach { line ->
                     lineCount++
+                    
+                    // Detect Section Headers
+                    if (line.startsWith("------")) {
+                        val headerMatcher = SECTION_HEADER_PATTERN.matcher(line)
+                        if (headerMatcher.find()) {
+                            currentSection = headerMatcher.group(1) ?: ""
+                            skipCurrentSection = IGNORED_SECTIONS.any { currentSection.contains(it) }
+                        }
+                    }
+                    
+                    if (skipCurrentSection) return@forEach
                     
                     // Report progress every 10000 lines
                     if (lineCount % 10000 == 0) {
@@ -200,6 +231,53 @@ class DumpstateParser {
                             stateOfCharge = socMatcher.group(1)?.toIntOrNull()
                         }
                     }
+                    
+                    // Parse New Samsung BattInfo
+                    val asocMatcher = SS_BATT_INFO_ASOC_PATTERN.matcher(line)
+                    if (asocMatcher.find()) {
+                        val asoc = asocMatcher.group(1)?.toDoubleOrNull()
+                        if (asoc != null) {
+                            directHealthPercentage = asoc
+                            hasReliableCapacity = true
+                        }
+                    }
+                    
+                    val cycleStrMatcher = SS_BATT_INFO_CYCLE_STR_PATTERN.matcher(line)
+                    if (cycleStrMatcher.find()) {
+                        val cycles = cycleStrMatcher.group(1)?.toIntOrNull()
+                        if (cycles != null && cycles > (cycleCount ?: -1)) {
+                            cycleCount = cycles
+                        }
+                    }
+                    
+                    val maxDischargeMatcher = SS_BATT_INFO_DISCHARGE_MAX_PATTERN.matcher(line)
+                    if (maxDischargeMatcher.find()) {
+                        val total = maxDischargeMatcher.group(1)?.toLongOrNull()
+                        if (total != null) {
+                            val calculatedCycles = (total / 100).toInt()
+                            if (calculatedCycles > (cycleCount ?: -1)) {
+                                cycleCount = calculatedCycles
+                            }
+                        }
+                    }
+                    
+                    val dischargeMatcher = SS_BATT_INFO_DISCHARGE_PATTERN.matcher(line)
+                    if (dischargeMatcher.find()) {
+                        val totalDischarge = dischargeMatcher.group(1)?.toLongOrNull()
+                        if (totalDischarge != null) {
+                            val calculatedCycles = (totalDischarge / 100).toInt()
+                            if (calculatedCycles > (cycleCount ?: -1)) {
+                                cycleCount = calculatedCycles
+                            }
+                        }
+                    }
+                    
+                    if (firstUseDate == null) {
+                        val ssFirstUseMatcher = SS_BATT_INFO_FIRST_USE_PATTERN.matcher(line)
+                        if (ssFirstUseMatcher.find()) {
+                            firstUseDate = formatFirstUseDate(ssFirstUseMatcher.group(1))
+                        }
+                    }
 
                     // Parse SOC from debug logs e.g. "SOC(85)"
                     if (stateOfCharge == null) {
@@ -274,15 +352,17 @@ class DumpstateParser {
         // Only use design capacity if it's reliable (actually from device, not estimated)
         val finalDesignCapacity = if (isDesignCapacityReliable) actualDesignCapacity else null
         
-        val healthPercentage = if (isDesignCapacityReliable) {
+        val calculatedHealth = if (isDesignCapacityReliable) {
             calculateHealthPercentage(
-                currentCapacity, 
-                fullChargeCapacity, 
+                currentCapacity,
+                fullChargeCapacity,
                 actualDesignCapacity
             )
         } else {
-            null // Don't show health if design capacity is estimated
+            null
         }
+
+        val healthPercentage = directHealthPercentage ?: calculatedHealth
         
         // Combine brand and model
         val deviceName = when {
@@ -297,6 +377,7 @@ class DumpstateParser {
             designCapacityMah = finalDesignCapacity,
             fullChargeCapacityMah = fullChargeCapacity,
             healthPercentage = healthPercentage,
+            calculatedHealthPercentage = calculatedHealth,
             firstUseDate = firstUseDate,
             stateOfCharge = stateOfCharge,
             logfileTimestamp = logfileTimestamp,
