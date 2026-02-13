@@ -59,7 +59,7 @@ class HistoryManager(context: Context) {
                 entries.add(HistoryEntry.fromJson(jsonObject))
             }
             
-            entries.sortedByDescending { it.timestamp }
+            entries.sortedByDescending { it.eventTimestamp }
         } catch (e: Exception) {
             emptyList()
         }
@@ -108,8 +108,9 @@ class HistoryManager(context: Context) {
     }
     
     private fun saveEntries(entries: List<HistoryEntry>) {
+        val sortedEntries = entries.sortedByDescending { it.eventTimestamp }
         val jsonArray = JSONArray()
-        entries.forEach { entry ->
+        sortedEntries.forEach { entry ->
             jsonArray.put(entry.toJson())
         }
         

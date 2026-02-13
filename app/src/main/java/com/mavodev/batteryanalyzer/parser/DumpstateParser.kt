@@ -15,15 +15,16 @@ class DumpstateParser {
         private val FULL_CHARGE_PATTERN = Pattern.compile("batteryFullChargeUah:\\s+(\\d+)")
         private val DESIGN_CAP_UAH_PATTERN = Pattern.compile("batteryFullChargeDesignCapacityUah:\\s+(\\d+)")
         private val FIRST_USE_DATE_PATTERN = Pattern.compile("FirstUseDate.*?\\[(\\d{8})\\]")
-        private val SOC_PATTERN = Pattern.compile("SoC:(\\d+)\\(%\\)")
+        private val SOC_PATTERN = Pattern.compile("SoC:(\\d+)\\(?%?\\)?")
         
         // Sony/Generic patterns
         private val SONY_CYCLE_COUNT_PATTERN = Pattern.compile("android\\.os\\.extra\\.CYCLE_COUNT=(\\d+)")
         private val SONY_CHARGE_COUNTER_PATTERN = Pattern.compile("charge_counter=(\\d+)")
-        private val HEALTHD_BATTERY_PATTERN = Pattern.compile("healthd: battery l=(\\d+).*?fc=(\\d+).*?cc=(\\d+)")
+        private val HEALTHD_BATTERY_PATTERN = Pattern.compile("healthd: battery l=(\\d+)(?:.*?fc=(\\d+))?(?:.*?cc=(\\d+))?")
         private val CHARGE_COUNTER_SERVICE_PATTERN = Pattern.compile("Charge counter:\\s+(\\d+)")
-        private val BATTERY_LEVEL_PATTERN = Pattern.compile("^\\s+level:\\s+(\\d+)")
+        private val BATTERY_LEVEL_PATTERN = Pattern.compile("^\\s+level:\\s+(\\d+)$")
         private val ESTIMATED_CAPACITY_PATTERN = Pattern.compile("Estimated battery capacity:\\s+(\\d+)\\s*mAh")
+        private val RATED_CAPACITY_PATTERN = Pattern.compile("Rated:\\s+(\\d+)")
         private val LEARNED_CAPACITY_PATTERN = Pattern.compile("Last learned battery capacity:\\s+(\\d+)\\s*mAh")
         private val DUMPSTATE_TIMESTAMP_PATTERN = Pattern.compile("== dumpstate: (\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2})")
         private val DEVICE_BRAND_PATTERN = Pattern.compile("\\[ro\\.product\\.brand\\]:\\s*\\[(.+?)\\]")
@@ -35,8 +36,6 @@ class DumpstateParser {
         private val SS_BATT_INFO_DISCHARGE_MAX_PATTERN = Pattern.compile("maxDischargeLevel:(\\d+)")
         private val SS_BATT_INFO_CYCLE_STR_PATTERN = Pattern.compile("cycleStr:(\\d+)")
         private val SS_BATT_INFO_FIRST_USE_PATTERN = Pattern.compile("\\[SS\\]\\[BattInfo\\]FirstUseDateData.*?efsValue:(\\d{8})")
-        private val SECTION_HEADER_PATTERN = Pattern.compile("^------ (.*?) ------$")
-        
         private val IGNORED_SECTIONS = listOf(
             "LAST KMSG",
             "LAST LOGCAT",
@@ -52,8 +51,9 @@ class DumpstateParser {
         private val TIMESTAMP_PATTERN = Pattern.compile("(\\d{4}-\\d{2}-\\d{2}\\s+\\d{2}:\\d{2}:\\d{2})")
         
         // Fallback SoC patterns
-        private val SOC_DEBUG_PATTERN = Pattern.compile("SOC\\((\\d+)\\)")
-        private val HEALTHD_LEVEL_PATTERN = Pattern.compile("healthd: battery.*?\\s+l=(\\d+)")
+        private val SOC_DEBUG_PATTERN = Pattern.compile("SOC\\((\\d+)%?\\)")
+        private val HEALTHD_LEVEL_PATTERN = Pattern.compile("healthd: battery.*?l=(\\d+)")
+        private val SECTION_HEADER_PATTERN = Pattern.compile("^\\-+\\s*(.*?)\\s*\\-+$")
     }
     
     fun parse(inputStream: InputStream, progressCallback: ((Int) -> Unit)? = null): BatteryInfo {
@@ -61,9 +61,11 @@ class DumpstateParser {
         var currentCapacity: Int? = null
         var fullChargeCapacity: Int? = null
         var designCapacity: Int? = null
+        var ratedCapacity: Int? = null
         var firstUseDate: String? = null
         var stateOfCharge: Int? = null
         var logfileTimestamp: String? = null
+        var logfileTimestampLong: Long? = null
         var deviceBrand: String? = null
         var deviceModel: String? = null
         var hasReliableCapacity = false // Track if we have Samsung CAP_NOM
@@ -83,8 +85,8 @@ class DumpstateParser {
                     lineCount++
                     
                     // Detect Section Headers
-                    if (line.startsWith("------")) {
-                        val headerMatcher = SECTION_HEADER_PATTERN.matcher(line)
+                    if (line.trim().startsWith("---")) {
+                        val headerMatcher = SECTION_HEADER_PATTERN.matcher(line.trim())
                         if (headerMatcher.find()) {
                             currentSection = headerMatcher.group(1) ?: ""
                             skipCurrentSection = IGNORED_SECTIONS.any { currentSection.contains(it) }
@@ -108,7 +110,9 @@ class DumpstateParser {
                     if (logfileTimestamp == null) {
                         val dumpstateMatcher = DUMPSTATE_TIMESTAMP_PATTERN.matcher(line)
                         if (dumpstateMatcher.find()) {
-                            logfileTimestamp = formatLogfileTimestamp(dumpstateMatcher.group(1))
+                            val rawTs = dumpstateMatcher.group(1) ?: ""
+                            logfileTimestamp = formatLogfileTimestamp(rawTs)
+                            logfileTimestampLong = parseLogfileTimestampToLong(rawTs)
                         }
                     }
                     
@@ -159,10 +163,13 @@ class DumpstateParser {
                         }
                     }
                     
-                    // Parse healthd battery line (has both fc and cc)
-                    if (currentCapacity == null || cycleCount == null) {
+                    // Parse healthd battery line (has l, fc and cc)
+                    if (currentCapacity == null || cycleCount == null || stateOfCharge == null || stateOfCharge == 0) {
                         val healthdMatcher = HEALTHD_BATTERY_PATTERN.matcher(line)
                         if (healthdMatcher.find()) {
+                            if (stateOfCharge == null || stateOfCharge == 0) {
+                                stateOfCharge = healthdMatcher.group(1)?.toIntOrNull()
+                            }
                             if (currentCapacity == null) {
                                 val fcUah = healthdMatcher.group(2)?.toLongOrNull()
                                 if (fcUah != null) {
@@ -194,10 +201,18 @@ class DumpstateParser {
                     }
                     
                     // Parse estimated battery capacity from battery stats
-                    if (designCapacity == null) {
+                    if (ratedCapacity == null) {
                         val estimatedMatcher = ESTIMATED_CAPACITY_PATTERN.matcher(line)
                         if (estimatedMatcher.find()) {
-                            designCapacity = estimatedMatcher.group(1)?.toIntOrNull()
+                            ratedCapacity = estimatedMatcher.group(1)?.toIntOrNull()
+                        }
+                    }
+                    
+                    // Parse rated capacity specifically
+                    if (ratedCapacity == null) {
+                        val ratedMatcher = RATED_CAPACITY_PATTERN.matcher(line)
+                        if (ratedMatcher.find()) {
+                            ratedCapacity = ratedMatcher.group(1)?.toIntOrNull()
                         }
                     }
                     
@@ -327,7 +342,7 @@ class DumpstateParser {
                             if (level != null && lastTimestamp.isNotEmpty()) {
                                 batteryChanges.add(
                                     BatteryLevelChange(
-                                        timestamp = lastTimestamp,
+                                        timestamp = lastTimestamp.trim(),
                                         level = level,
                                         action = "BATTERY_CHANGED"
                                     )
@@ -356,7 +371,7 @@ class DumpstateParser {
             calculateHealthPercentage(
                 currentCapacity,
                 fullChargeCapacity,
-                actualDesignCapacity
+                ratedCapacity ?: actualDesignCapacity
             )
         } else {
             null
@@ -375,12 +390,14 @@ class DumpstateParser {
             cycleCount = cycleCount,
             currentCapacityMah = currentCapacity ?: fullChargeCapacity,
             designCapacityMah = finalDesignCapacity,
+            ratedCapacityMah = ratedCapacity,
             fullChargeCapacityMah = fullChargeCapacity,
             healthPercentage = healthPercentage,
             calculatedHealthPercentage = calculatedHealth,
             firstUseDate = firstUseDate,
             stateOfCharge = stateOfCharge,
             logfileTimestamp = logfileTimestamp,
+            logfileTimestampLong = logfileTimestampLong,
             deviceModel = deviceName,
             batteryLevelChanges = batteryChanges.takeLast(20), // Most recent 20
             parseErrors = errors
@@ -419,6 +436,16 @@ class DumpstateParser {
             }
             
             return "$monthName $day$daySuffix, $year"
+        } catch (e: Exception) {
+            return null
+        }
+    }
+    
+    private fun parseLogfileTimestampToLong(timestamp: String): Long? {
+        try {
+            // Input: "2026-01-21 16:06:52"
+            val sdf = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.US)
+            return sdf.parse(timestamp.trim())?.time
         } catch (e: Exception) {
             return null
         }

@@ -8,12 +8,14 @@ data class BatteryInfo(
     val cycleCount: Int? = null,
     val currentCapacityMah: Int? = null,
     val designCapacityMah: Int? = null,
+    val ratedCapacityMah: Int? = null,
     val fullChargeCapacityMah: Int? = null,
     val healthPercentage: Double? = null,
     val calculatedHealthPercentage: Double? = null,
     val firstUseDate: String? = null,
     val stateOfCharge: Int? = null,
     val logfileTimestamp: String? = null,
+    val logfileTimestampLong: Long? = null,
     val deviceModel: String? = null,
     val batteryLevelChanges: List<BatteryLevelChange> = emptyList(),
     val parseErrors: List<String> = emptyList()
@@ -24,12 +26,6 @@ data class BatteryInfo(
     val degradationPercentage: Double?
         get() = healthPercentage?.let { 100.0 - it }
     
-    val capacityLossMah: Int?
-        get() {
-            return if (designCapacityMah != null && currentCapacityMah != null) {
-                designCapacityMah - currentCapacityMah
-            } else null
-        }
     
     val hasData: Boolean
         get() = cycleCount != null || currentCapacityMah != null || 

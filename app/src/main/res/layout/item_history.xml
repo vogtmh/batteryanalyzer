@@ -30,15 +30,64 @@
                 android:layout_weight="1"
                 android:orientation="vertical">
 
-                <!-- Health Percentage as Title -->
-                <TextView
-                    android:id="@+id/tvHealthTitle"
+                <!-- Dual Health Title -->
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
-                    tools:text="100%"
-                    tools:textColor="@color/health_excellent"/>
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <!-- Reported Health -->
+                    <LinearLayout
+                        android:id="@+id/layoutReportedHealth"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="12dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <ImageView
+                            android:id="@+id/ivReportedHealth"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_marginEnd="4dp"
+                            android:src="@drawable/ic_android" />
+
+                        <TextView
+                            android:id="@+id/tvReportedHealthTitle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            tools:text="100%" />
+                    </LinearLayout>
+
+                    <!-- Calculated Health -->
+                    <LinearLayout
+                        android:id="@+id/layoutCalculatedHealth"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <ImageView
+                            android:id="@+id/ivCalculatedHealth"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_marginEnd="4dp"
+                            android:src="@drawable/ic_calculator" />
+
+                        <TextView
+                            android:id="@+id/tvCalculatedHealthTitle"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            tools:text="98.5%" />
+                    </LinearLayout>
+                </LinearLayout>
 
                 <!-- Logfile Date Subtitle -->
                 <TextView
@@ -92,6 +141,30 @@
             android:orientation="vertical"
             android:visibility="gone">
 
+            <!-- Reported Health -->
+            <LinearLayout
+                android:id="@+id/reportedHealthLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingVertical="4dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/reported_health_label"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/tvReportedHealth"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="14sp"
+                    tools:text="100%" />
+            </LinearLayout>
+
             <!-- Calculated Health -->
             <LinearLayout
                 android:id="@+id/calculatedHealthLayout"
@@ -138,8 +211,9 @@
                     tools:text="4937 mAh" />
             </LinearLayout>
 
-            <!-- Design Capacity -->
+            <!-- Typical Capacity (Marketing) -->
             <LinearLayout
+                android:id="@+id/typicalCapacityLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
@@ -149,15 +223,39 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="@string/design_capacity"
+                    android:text="@string/typical_capacity"
                     android:textSize="14sp" />
 
                 <TextView
-                    android:id="@+id/tvDesignCapacity"
+                    android:id="@+id/tvTypicalCapacity"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textSize="14sp"
                     tools:text="5000 mAh" />
+            </LinearLayout>
+
+            <!-- Rated Capacity (Scientific) -->
+            <LinearLayout
+                android:id="@+id/ratedCapacityLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingVertical="4dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/rated_capacity"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/tvRatedCapacity"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="14sp"
+                    tools:text="4855 mAh" />
             </LinearLayout>
             
             <!-- Cycle Count -->

@@ -715,34 +715,35 @@ class MainActivity : AppCompatActivity() {
             binding.tvCurrentCapacity.text = getString(R.string.not_available)
         }
 
-        // Design Capacity
+        // Design/Typical/Rated Capacity
         if (batteryInfo.designCapacityMah != null) {
             val hasReliableDesign = batteryInfo.healthPercentage != null
-            if (hasReliableDesign) {
-                binding.tvDesignCapacity.text = getString(
-                    R.string.format_mah,
-                    batteryInfo.designCapacityMah
-                )
+            val typicalMah = batteryInfo.designCapacityMah
+            val ratedMah = batteryInfo.ratedCapacityMah
+
+            if (ratedMah != null && ratedMah != typicalMah) {
+                // Samsung style: Rated at top, Typical in Stats
+                binding.tvPrimaryCapacityLabel.text = getString(R.string.rated_capacity)
+                binding.tvPrimaryCapacity.text = getString(R.string.format_mah, ratedMah)
+                
+                binding.layoutStatsTypicalCapacity.visibility = View.VISIBLE
+                binding.tvStatsTypicalCapacity.text = getString(R.string.format_mah, typicalMah)
             } else {
-                // Show estimated value with note
-                binding.tvDesignCapacity.text = getString(
-                    R.string.format_mah,
-                    batteryInfo.designCapacityMah
-                ) + " (approx)"
+                // Standard style: Design at top, hide Typical in Stats
+                binding.tvPrimaryCapacityLabel.text = getString(R.string.design_capacity)
+                binding.layoutStatsTypicalCapacity.visibility = View.GONE
+                
+                if (hasReliableDesign) {
+                    binding.tvPrimaryCapacity.text = getString(R.string.format_mah, typicalMah)
+                } else {
+                    binding.tvPrimaryCapacity.text = getString(R.string.format_mah, typicalMah) + " (approx)"
+                }
             }
         } else {
-            binding.tvDesignCapacity.text = getString(R.string.not_available)
+            binding.tvPrimaryCapacity.text = getString(R.string.not_available)
+            binding.layoutStatsTypicalCapacity.visibility = View.GONE
         }
 
-        // Capacity Loss
-        if (batteryInfo.capacityLossMah != null) {
-            binding.tvCapacityLoss.text = getString(
-                R.string.format_mah,
-                batteryInfo.capacityLossMah
-            )
-        } else {
-            binding.tvCapacityLoss.text = getString(R.string.not_available)
-        }
 
         // Cycle Count
         if (batteryInfo.cycleCount != null) {

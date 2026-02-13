@@ -147,19 +147,34 @@ class HistoryAdapter(
         private var isExpanded = false
 
         fun bind(entry: HistoryEntry) {
-            // Set health as title
-            if (entry.healthPercentage != null) {
+            // Reported Health Title
+            val reportedHealth = entry.healthPercentage
+            if (reportedHealth != null) {
                 val df = DecimalFormat("#.#")
-                val text = "${df.format(entry.healthPercentage)}%"
-                // Add device model as well? User said "replace it", so just health.
-                // But maybe "Health: 98%"? User said "98.5%".
-                binding.tvHealthTitle.text = text
-                binding.tvHealthTitle.setTextColor(getHealthColor(entry.healthPercentage))
+                binding.tvReportedHealthTitle.text = "${df.format(reportedHealth)}%"
+                binding.tvReportedHealthTitle.setTextColor(getHealthColor(reportedHealth))
+                
+                val healthColor = getHealthColor(reportedHealth)
+                binding.ivReportedHealth.imageTintList = 
+                    android.content.res.ColorStateList.valueOf(healthColor)
+                binding.layoutReportedHealth.visibility = View.VISIBLE
             } else {
-                binding.tvHealthTitle.text = "N/A"
-                binding.tvHealthTitle.setTextColor(
-                    ContextCompat.getColor(binding.root.context, android.R.color.darker_gray)
-                )
+                binding.layoutReportedHealth.visibility = View.GONE
+            }
+
+            // Calculated Health Title
+            val calculatedHealth = entry.calculatedHealthPercentage
+            if (calculatedHealth != null) {
+                val df = DecimalFormat("#.#")
+                binding.tvCalculatedHealthTitle.text = "${df.format(calculatedHealth)}%"
+                binding.tvCalculatedHealthTitle.setTextColor(getHealthColor(calculatedHealth))
+                
+                val healthColor = getHealthColor(calculatedHealth)
+                binding.ivCalculatedHealth.imageTintList = 
+                    android.content.res.ColorStateList.valueOf(healthColor)
+                binding.layoutCalculatedHealth.visibility = View.VISIBLE
+            } else {
+                binding.layoutCalculatedHealth.visibility = View.GONE
             }
 
             // Set logfile date in subtitle
@@ -176,16 +191,34 @@ class HistoryAdapter(
                 binding.tvCurrentCapacity.text = "N/A"
             }
 
-            if (entry.designCapacityMah != null) {
-                binding.tvDesignCapacity.text = "${entry.designCapacityMah} mAh"
+            if (entry.ratedCapacityMah != null && entry.ratedCapacityMah > 0) {
+                binding.tvRatedCapacity.text = "${entry.ratedCapacityMah} mAh"
+                binding.ratedCapacityLayout.visibility = View.VISIBLE
+                // Hide typical capacity in history if we have rated capacity
+                binding.typicalCapacityLayout.visibility = View.GONE
             } else {
-                binding.tvDesignCapacity.text = "N/A"
+                binding.ratedCapacityLayout.visibility = View.GONE
+                if (entry.designCapacityMah != null) {
+                    binding.tvTypicalCapacity.text = "${entry.designCapacityMah} mAh"
+                    binding.typicalCapacityLayout.visibility = View.VISIBLE
+                } else {
+                    binding.typicalCapacityLayout.visibility = View.GONE
+                }
             }
             
-            if (entry.calculatedHealthPercentage != null && 
-                entry.calculatedHealthPercentage != entry.healthPercentage) {
+            // Details Section - Reported Health
+            if (reportedHealth != null) {
                 val df = DecimalFormat("#.#")
-                binding.tvCalculatedHealth.text = "${df.format(entry.calculatedHealthPercentage)}%"
+                binding.tvReportedHealth.text = "${df.format(reportedHealth)}%"
+                binding.reportedHealthLayout.visibility = View.VISIBLE
+            } else {
+                binding.reportedHealthLayout.visibility = View.GONE
+            }
+
+            // Details Section - Calculated Health
+            if (calculatedHealth != null) {
+                val df = DecimalFormat("#.#")
+                binding.tvCalculatedHealth.text = "${df.format(calculatedHealth)}%"
                 binding.calculatedHealthLayout.visibility = View.VISIBLE
             } else {
                 binding.calculatedHealthLayout.visibility = View.GONE

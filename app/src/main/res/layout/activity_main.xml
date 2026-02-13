@@ -288,14 +288,16 @@
                             tools:text="4937 mAh" />
                     </LinearLayout>
 
-                    <!-- Design Capacity -->
+                    <!-- Primary Capacity (Rated or Design) -->
                     <LinearLayout
+                        android:id="@+id/layoutPrimaryCapacity"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
                         android:orientation="horizontal">
 
                         <TextView
+                            android:id="@+id/tvPrimaryCapacityLabel"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
@@ -303,34 +305,13 @@
                             android:textSize="14sp" />
 
                         <TextView
-                            android:id="@+id/tvDesignCapacity"
+                            android:id="@+id/tvPrimaryCapacity"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:textSize="14sp"
                             tools:text="5000 mAh" />
                     </LinearLayout>
 
-                    <!-- Capacity Loss -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:orientation="horizontal">
-
-                        <TextView
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/capacity_loss"
-                            android:textSize="14sp" />
-
-                        <TextView
-                            android:id="@+id/tvCapacityLoss"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:textSize="14sp"
-                            tools:text="63 mAh" />
-                    </LinearLayout>
 
                     <!-- Health Status -->
                     <TextView
@@ -384,6 +365,30 @@
                             android:textSize="14sp"
                             android:textStyle="bold"
                             tools:text="SM-S928B" />
+                    </LinearLayout>
+                    <!-- Typical Capacity (Moved to Stats) -->
+                    <LinearLayout
+                        android:id="@+id/layoutStatsTypicalCapacity"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:orientation="horizontal"
+                        android:visibility="gone"
+                        tools:visibility="visible">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/typical_capacity"
+                            android:textSize="14sp" />
+
+                        <TextView
+                            android:id="@+id/tvStatsTypicalCapacity"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textSize="14sp"
+                            tools:text="5000 mAh" />
                     </LinearLayout>
 
                     <!-- SoC (State of Charge) -->

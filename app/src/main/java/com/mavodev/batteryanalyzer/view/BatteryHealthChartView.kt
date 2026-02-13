@@ -90,7 +90,7 @@ class BatteryHealthChartView @JvmOverloads constructor(
         // Filter entries with valid health percentage and sort by timestamp
         entries = historyEntries
             .filter { it.healthPercentage != null || it.calculatedHealthPercentage != null }
-            .sortedBy { it.timestamp }
+            .sortedBy { it.eventTimestamp }
         
         // Update colors based on latest health
         if (entries.isNotEmpty()) {

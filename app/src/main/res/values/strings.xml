@@ -18,8 +18,10 @@
     <string name="battery_health">Battery Health:</string>
     <string name="current_capacity">Current Capacity:</string>
     <string name="design_capacity">Design Capacity:</string>
-    <string name="capacity_loss">Capacity Loss:</string>
+    <string name="typical_capacity">Typical Capacity:</string>
+    <string name="rated_capacity">Rated Capacity:</string>
     <string name="calculated_health_label">Calculated Health:</string>
+    <string name="reported_health_label">Reported Health:</string>
     <string name="state_of_charge">State of Charge (SoC):</string>
     <string name="cycle_count">Cycle Count:</string>
     <string name="first_use_date">First Use Date:</string>
@@ -41,12 +43,12 @@
     <!-- Help Dialog -->
     <string name="help_title">Help</string>
     <string name="help_samsung_title">Samsung Devices:</string>
-    <string name="help_samsung_instructions">1. Open the Phone app\n2. Dial *#9900#\n3. Tap \"Run dumpstate/logcat\" and wait for completion\n4. Tap \"Copy to sdcard\"\n5. Files are saved to /log folder\n6. Use this app to analyze</string>
+    <string name="help_samsung_instructions"><![CDATA[1. Use the official <b>Samsung Phone</b> app<br/>2. Dial <b>*#9900#</b><br/>3. Tap \"Run dumpstate/logcat\" and wait for completion<br/>4. Tap \"Copy to sdcard\"<br/>5. Files are saved to <b>/log</b> folder<br/>6. Use this app to analyze<br/><br/><b>Troubleshooting \"Invalid MMI Code\":</b><br/>• Go to <b>Settings > Security > Auto Blocker</b> and set it to <b>Disabled</b>.<br/>• Alternatively, use the \"Other devices\" method below.]]></string>
     <string name="help_sony_title">Other devices (tested on Sony):</string>
     <string name="help_sony_instructions">1. Go to Settings → About phone\n2. Tap \"Build number\" 7 times to enable Developer options\n3. Go to Settings → System → Developer options\n4. Tap \"Take bug report\"\n5. Select \"Full report\"\n6. Wait for notification\n7. Tap on notification and save file as ZIP\n8. Use this app to analyze</string>
     
     <string name="help_health_title">Battery Health Explanation</string>
-    <string name="help_health_content" formatted="false"><![CDATA[<b>Official Health:</b><br/>This is the value reported by your device\'s system (e.g., Samsung\'s ASOC). Manufacturers often use software smoothing or buffers to keep this at 100% for new devices even if the raw capacity varies slightly.<br/><br/><b>Calculated Health:</b><br/>This is the raw result of (Current Capacity / Design Capacity). It provides a more immediate look at the hardware state but may occasionally exceed 100% due to manufacturer over-capacity or battery manufacturing tolerances (e.g., a "5000 mAh" battery might actually hold 5100 mAh when brand new).<br/><br/>If the two values differ significantly, it usually means the system is still calibrating the official health metric.]]></string>
+    <string name="help_health_content" formatted="false"><![CDATA[<b>Official Health:</b><br/>This is the value reported by your device\'s system (e.g., Samsung\'s ASOC). Manufacturers often use software smoothing or buffers to keep this at 100% for new devices even if the raw capacity varies slightly.<br/><br/><b>Calculated Health:</b><br/>This is the raw result of (Current Capacity / Rated Capacity). The app prefers the \"Rated\" capacity (the minimum hardware spec) over the \"Typical\" capacity (marketing number) when both are available. This provides a more realistic look at the hardware state but may occasionally exceed 100% due to manufacturing tolerances (e.g., a \"5000 mAh\" battery might actually hold 5100 mAh when brand new).<br/><br/>If the two values differ significantly, it usually means the system is still calibrating the official health metric.]]></string>
     
     <string name="help_close">Close</string>
     

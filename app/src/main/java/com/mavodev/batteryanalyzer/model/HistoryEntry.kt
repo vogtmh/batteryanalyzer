@@ -15,22 +15,29 @@ data class HistoryEntry(
     val designCapacityMah: Int?,
     val cycleCount: Int?,
     val stateOfCharge: Int?,
-    val firstUseDate: String?
+    val firstUseDate: String?,
+    val logfileTimestampLong: Long? = null,
+    val ratedCapacityMah: Int? = null
 ) : Parcelable {
+    
+    val eventTimestamp: Long
+        get() = timestamp
     
     val calculatedHealthPercentage: Double?
         get() {
-            return if (currentCapacityMah != null && designCapacityMah != null && designCapacityMah > 0) {
-                (currentCapacityMah.toDouble() / designCapacityMah.toDouble()) * 100.0
+            val baseCapacity = ratedCapacityMah ?: designCapacityMah
+            return if (currentCapacityMah != null && baseCapacity != null && baseCapacity > 0) {
+                (currentCapacityMah.toDouble() / baseCapacity.toDouble()) * 100.0
             } else null
         }
     
     companion object {
         fun fromBatteryInfo(batteryInfo: BatteryInfo): HistoryEntry {
-            val timestamp = System.currentTimeMillis()
+            // Priority: Log date (if found in file), otherwise analysis time
+            val ts = batteryInfo.logfileTimestampLong ?: System.currentTimeMillis()
             return HistoryEntry(
-                id = timestamp.toString(),
-                timestamp = timestamp,
+                id = ts.toString(),
+                timestamp = ts,
                 logfileTimestamp = batteryInfo.logfileTimestamp,
                 deviceModel = batteryInfo.deviceModel,
                 healthPercentage = batteryInfo.healthPercentage,
@@ -38,7 +45,9 @@ data class HistoryEntry(
                 designCapacityMah = batteryInfo.designCapacityMah,
                 cycleCount = batteryInfo.cycleCount,
                 stateOfCharge = batteryInfo.stateOfCharge,
-                firstUseDate = batteryInfo.firstUseDate
+                firstUseDate = batteryInfo.firstUseDate,
+                logfileTimestampLong = batteryInfo.logfileTimestampLong,
+                ratedCapacityMah = batteryInfo.ratedCapacityMah
             )
         }
         
@@ -58,7 +67,11 @@ data class HistoryEntry(
                     json.getInt("cycleCount") else null,
                 stateOfCharge = if (json.has("stateOfCharge") && !json.isNull("stateOfCharge")) 
                     json.getInt("stateOfCharge") else null,
-                firstUseDate = json.optString("firstUseDate").takeIf { it.isNotEmpty() }
+                firstUseDate = json.optString("firstUseDate").takeIf { it.isNotEmpty() },
+                logfileTimestampLong = if (json.has("logfileTimestampLong") && !json.isNull("logfileTimestampLong"))
+                    json.getLong("logfileTimestampLong") else null,
+                ratedCapacityMah = if (json.has("ratedCapacityMah") && !json.isNull("ratedCapacityMah"))
+                    json.getInt("ratedCapacityMah") else null
             )
         }
     }
@@ -75,6 +88,8 @@ data class HistoryEntry(
             put("cycleCount", cycleCount ?: JSONObject.NULL)
             put("stateOfCharge", stateOfCharge ?: JSONObject.NULL)
             put("firstUseDate", firstUseDate ?: JSONObject.NULL)
+            put("logfileTimestampLong", logfileTimestampLong ?: JSONObject.NULL)
+            put("ratedCapacityMah", ratedCapacityMah ?: JSONObject.NULL)
         }
     }
     

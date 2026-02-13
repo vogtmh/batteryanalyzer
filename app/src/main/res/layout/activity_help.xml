@@ -42,6 +42,7 @@
                 android:layout_marginBottom="12dp" />
 
             <TextView
+                android:id="@+id/tvSamsungInstructions"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/help_samsung_instructions"
