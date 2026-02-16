@@ -50,6 +50,9 @@
     <string name="help_health_title">Battery Health Explanation</string>
     <string name="help_health_content" formatted="false"><![CDATA[<b>Official Health:</b><br/>This is the value reported by your device\'s system (e.g., Samsung\'s ASOC). Manufacturers often use software smoothing or buffers to keep this at 100% for new devices even if the raw capacity varies slightly.<br/><br/><b>Calculated Health:</b><br/>This is the raw result of (Current Capacity / Rated Capacity). The app prefers the \"Rated\" capacity (the minimum hardware spec) over the \"Typical\" capacity (marketing number) when both are available. This provides a more realistic look at the hardware state but may occasionally exceed 100% due to manufacturing tolerances (e.g., a \"5000 mAh\" battery might actually hold 5100 mAh when brand new).<br/><br/>If the two values differ significantly, it usually means the system is still calibrating the official health metric.]]></string>
     
+    <string name="help_capacity_title">Rated vs. Typical Capacity</string>
+    <string name="help_capacity_content" formatted="false"><![CDATA[The app determines the battery capacity used for health calculations based on the following priority:<br/><br/><b>1. Rated Capacity (Highest Priority)</b><br/>This is the minimum guaranteed capacity of the battery as specified by the manufacturer. It is the most accurate baseline for health calculations.<br/><br/><b>2. Typical Capacity / Override</b><br/>This is the marketing capacity (e.g., \"5000 mAh\"). It is used if no Rated Capacity is found. You can also manually override this value in Settings.<br/><br/><b>3. Manual Setting</b><br/>If neither of the above can be found in the log, the app will prompt the user to enter a manual value in the settings as a last resort.]]></string>
+    
     <string name="help_close">Close</string>
     
     <!-- Menu -->
@@ -60,16 +63,16 @@
     
     <!-- Settings Dialog -->
     <string name="settings_title">Settings</string>
-    <string name="settings_design_capacity_label">Design Capacity (mAh)</string>
+    <string name="settings_design_capacity_label">Typical Capacity Override (mAh)</string>
     <string name="settings_design_capacity_hint">e.g., 5000</string>
-    <string name="settings_design_capacity_description">Specify a design capacity value to use when automatic detection fails. Leave empty to rely entirely on automatic detection.</string>
+    <string name="settings_design_capacity_description">Specify a Typical Capacity in case the automatic detection fails or needs to be overridden. Leave empty to rely on automatic detection. If a Rated Capacity is reported, this setting will be ignored.</string>
     <string name="settings_override_label">Always Override</string>
     <string name="settings_override_description">When enabled, always use the manual value above, ignoring values from the battery report.</string>
     <string name="settings_clear">Clear Stored Value</string>
     <string name="settings_save">Save</string>
     <string name="settings_cancel">Cancel</string>
-    <string name="settings_cleared">Design capacity cleared</string>
-    <string name="settings_saved">Design capacity saved</string>
+    <string name="settings_cleared">Typical capacity cleared</string>
+    <string name="settings_saved">Typical capacity saved</string>
     <string name="export_data">Export Data</string>
     <string name="import_data">Import Data</string>
     <string name="export_success">Data exported successfully</string>

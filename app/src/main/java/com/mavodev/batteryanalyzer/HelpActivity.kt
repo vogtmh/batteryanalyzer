@@ -44,6 +44,11 @@ class HelpActivity : AppCompatActivity() {
             getString(R.string.help_samsung_instructions),
             HtmlCompat.FROM_HTML_MODE_LEGACY
         )
+
+        binding.tvCapacityExplanation.text = HtmlCompat.fromHtml(
+            getString(R.string.help_capacity_content),
+            HtmlCompat.FROM_HTML_MODE_LEGACY
+        )
     }
 
     override fun onSupportNavigateUp(): Boolean {

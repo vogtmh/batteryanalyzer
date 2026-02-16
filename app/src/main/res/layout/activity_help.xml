@@ -80,6 +80,23 @@
                 android:layout_height="wrap_content"
                 android:text="@string/help_health_content"
                 android:textSize="14sp"
+                android:lineSpacingExtra="4dp"
+                android:layout_marginBottom="32dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/help_capacity_title"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="12dp" />
+
+            <TextView
+                android:id="@+id/tvCapacityExplanation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/help_capacity_content"
+                android:textSize="14sp"
                 android:lineSpacingExtra="4dp" />
 
         </LinearLayout>
